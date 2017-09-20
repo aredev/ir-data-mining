@@ -5,6 +5,7 @@ from whoosh.query import *
 from whoosh.analysis import StemmingAnalyzer
 from whoosh.qparser import QueryParser
 
+# Reverse index (http://whoosh.readthedocs.io/en/latest/glossary.html)
 
 
 # Create fake data
