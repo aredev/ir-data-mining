@@ -3,10 +3,12 @@ import os.path
 import sys
 from shutil import rmtree
 
-from whoosh.analysis import LowercaseFilter, StopFilter
+from whoosh.analysis import CharsetFilter, LowercaseFilter, StopFilter
 from whoosh.fields import Schema, TEXT, ID, STORED
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
+
+from whoosh.support.charset import accent_map   
 
 from db_handler import DbHandler
 from filters.wordnet_lemmatizer import WordnetLemmatizerFilter
@@ -24,6 +26,8 @@ class Indexer(object):
         and an optional StopFilter (for removing stopwords)
         """
         self.analyzer = StanTokenizer() | LowercaseFilter() | WordnetLemmatizerFilter() | StopFilter()
+
+        self.author_analyzer = LowercaseFilter() | CharsetFilter(accent_map)
         """
         The whoosh.fields.TEXT indexes the text and stores the term positions to allow phrase searching
         TEXT fields use StandardAnalyzer by default. 
@@ -35,14 +39,15 @@ class Indexer(object):
             #content=TEXT(analyzer=self.analyzer), # TODO Only commented for speedup
             year=STORED,
             title=STORED,
-            author_name=TEXT(),
+            # TODO: author_analyzer does not work here?
+            author_name=TEXT(), # Make sure accent folding is being used, stemming and variations not
             pdf_name=STORED,
         )
         """
         To test whether a directory currently contains a valid index, use index.exists_in:
         """
         # TODO remove "and False" cuz this is a debug statement
-        exists = exists_in(self.index_path) #and False
+        exists = exists_in(self.index_path) and False
         if exists:
             # A valid index exists, reload the index
             self.__reload_index()
