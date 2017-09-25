@@ -1,4 +1,4 @@
-from indexer import Indexer
+from Indexer import Indexer
 
 
 def main():

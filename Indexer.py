@@ -32,16 +32,17 @@ class Indexer(object):
         """
         self.schema = Schema(
             docId=ID(stored=True),
-            content=TEXT(analyzer=self.analyzer),
+            #content=TEXT(analyzer=self.analyzer), # TODO Only commented for speedup
             year=STORED,
             title=STORED,
+            author_name=TEXT(),
             pdf_name=STORED,
         )
         """
         To test whether a directory currently contains a valid index, use index.exists_in:
         """
         # TODO remove "and False" cuz this is a debug statement
-        exists = exists_in(self.index_path) and False
+        exists = exists_in(self.index_path) #and False
         if exists:
             # A valid index exists, reload the index
             self.__reload_index()
@@ -67,13 +68,18 @@ class Indexer(object):
         self.ix = create_in(self.index_path, self.schema)
         self.writer = self.ix.writer()
         # Add documents to the index
-        row_count, corpus = self.db_handler.get_table_rows_and_count("papers")
+        # "SELECT paper_authors.id, paper_id, author_id, name, year, title, event_type, pdf_name, abstract, paper_text FROM paper_authors ...
+        row_count, corpus = self.db_handler.get_table_rows_author_paper_and_count()
         try:
             for document in corpus:
-                docId, year, title, _, pdf_name, abstract, paper_text = document
+                _, docId, _, author_name, year, title, _, pdf_name, abstract, paper_text = document
                 print(docId, year, title, pdf_name, abstract)
-                self.writer.add_document(docId=str(docId), year=year, title=title, pdf_name=pdf_name,
-                                         content=paper_text)
+                self.writer.add_document(docId=str(docId),
+                                         year=year,
+                                         title=title,
+                                         pdf_name=pdf_name,
+                                         author_name = author_name)
+                                         #content=paper_text)
             # Commit changes
             self.writer.commit()
         except Exception as e:
