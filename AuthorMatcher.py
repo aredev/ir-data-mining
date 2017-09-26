@@ -16,11 +16,10 @@ class AuthorMatcher(object):
     def query(self, s):
         parsed = self.parser.parse(s)
         
+        results_persistent = []
         with self.index.searcher() as searcher:
             results = searcher.search(parsed)
-            
-            # TODO: Order by ranking
-            for r in results:
-                print(r)
+            for result in results:
+                results_persistent.append(str(result))
 
-        return s
+        return results_persistent
