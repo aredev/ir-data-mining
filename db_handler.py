@@ -21,7 +21,7 @@ class DbHandler(object):
         return len(results), results
 
     def get_table_rows_author_paper_and_count(self):
-        cursor = self.conn.execute("SELECT paper_authors.id, paper_id, author_id, name, year, title, event_type, pdf_name, abstract, paper_text FROM paper_authors LEFT JOIN authors ON paper_authors.author_id = authors.id LEFT JOIN papers ON paper_authors.paper_id = papers.id LIMIT 1000;" )
+        cursor = self.conn.execute("SELECT paper_authors.id, paper_id, author_id, name, year, title, event_type, pdf_name, abstract, paper_text FROM paper_authors LEFT JOIN authors ON paper_authors.author_id = authors.id LEFT JOIN papers ON paper_authors.paper_id = papers.id;" )
         results = cursor.fetchall()
         return len(results), results
 
