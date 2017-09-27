@@ -7,6 +7,7 @@ from whoosh.analysis import LowercaseFilter, StopFilter
 from whoosh.fields import Schema, TEXT, ID, STORED
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
+from nltk.tokenize import StanfordTokenizer
 
 from db_handler import DbHandler
 from filters.wordnet_lemmatizer import WordnetLemmatizerFilter
@@ -16,6 +17,8 @@ from tokenizers.stanford import StanTokenizer
 class Indexer(object):
     def __init__(self):
         self.db_handler = DbHandler()
+        self.stanford_path = os.path.abspath("libs/stanford-postagger.jar")
+        self.stanford_tokenizer = StanfordTokenizer
         self.index_path = "index"
         self.ix = None
         self.writer = None
@@ -40,7 +43,6 @@ class Indexer(object):
         """
         To test whether a directory currently contains a valid index, use index.exists_in:
         """
-        # TODO remove "and False" cuz this is a debug statement
         exists = exists_in(self.index_path)
         if exists:
             # A valid index exists, reload the index
@@ -68,14 +70,17 @@ class Indexer(object):
         self.writer = self.ix.writer()
         # Add documents to the index
         row_count, corpus = self.db_handler.get_table_rows_and_count("papers")
+        f = open('nips.mallet', 'w')
         try:
             for document in corpus:
                 docId, year, title, _, pdf_name, abstract, paper_text = document
-                print(docId, year, title, pdf_name, abstract)
-                self.writer.add_document(docId=str(docId), year=year, title=title, pdf_name=pdf_name,
-                                         content=paper_text)
+                # print(docId, year, title, pdf_name, abstract)
+                text = self.stanford_tokenizer(path_to_jar=self.stanford_path).tokenize(paper_text)
+                text = [x.lower() for x in text]
+                print(str(docId) + " en " + str(" ".join(text)))
+                f.write(str(docId) + " en " + str(" ".join(text)) + "\n")
             # Commit changes
-            self.writer.commit()
+            f.close()
         except Exception as e:
             # Formatted printing exception
             exc_type, exc_obj, exc_tb = sys.exc_info()
