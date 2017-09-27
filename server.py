@@ -6,6 +6,10 @@ Created on Tue Sep 26 13:03:21 2017
 """
 
 #!/usr/bin/env python
+import os
+import sys
+
+sys.path.append(os.getcwd())
 
 import asyncio
 import websockets
@@ -19,6 +23,7 @@ from AuthorMatcher import AuthorMatcher
 # Close on Ctrl+c under windows
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
+print("Initializing index...")
 index = Indexer()
 matcher = AuthorMatcher(index.ix)
 
@@ -44,6 +49,12 @@ async def retrieve_result(websocket, path):
                 'title': 'Search result #{}'.format(n),
                 'content': html.escape(str(result)),
             }))
+
+        await websocket.send(json.dumps({
+            'type': 'result',
+            'title': 'Last result',
+            'content': 'Last result',
+        }))
         
         await websocket.send(json.dumps({
             'type': 'state',
