@@ -41,7 +41,7 @@ class Indexer(object):
         To test whether a directory currently contains a valid index, use index.exists_in:
         """
         # TODO remove "and False" cuz this is a debug statement
-        exists = exists_in(self.index_path) and False
+        exists = exists_in(self.index_path)
         if exists:
             # A valid index exists, reload the index
             self.__reload_index()
