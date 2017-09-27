@@ -18,7 +18,7 @@ class AuthorMatcher(object):
         
         results_persistent = []
         with self.index.searcher() as searcher:
-            results = searcher.search(parsed)
+            results = searcher.search(parsed, limit=None) # Remove limit for speed improvement
             for result in results:
                 results_persistent.append(str(result))
 
