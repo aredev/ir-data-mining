@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.append(os.getcwd())
+
 from Indexer import Indexer
 from AuthorMatcher import AuthorMatcher
 
