@@ -22,3 +22,5 @@ for x in range(len(author_list)):
 with open('result.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerows(result)
+
+print('test')
