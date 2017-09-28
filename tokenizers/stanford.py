@@ -1,8 +1,8 @@
 import os
-
 from nltk.tokenize import StanfordTokenizer
 from whoosh.analysis import Composable, Token
 from whoosh.compat import text_type
+import regex
 
 
 class StanTokenizer(Composable):
@@ -10,6 +10,8 @@ class StanTokenizer(Composable):
         self.lib_dir = "libs/"
         self.stanford_path = os.path.abspath(self.lib_dir + "stanford-postagger.jar")
         self.stanford_tokenizer = StanfordTokenizer
+        # Taken from https://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
+        self.remove = regex.compile(r'[\p{C}|\p{M}|\p{P}|\p{S}|\p{Z}]+', regex.UNICODE)
 
     def __call__(self, value, positions=False, chars=False, keeporiginal=False,
                  removestops=True, start_pos=0, start_char=0, tokenize=True,
@@ -38,6 +40,9 @@ class StanTokenizer(Composable):
             prevend = 0
             pos = start_pos
             text = self.stanford_tokenizer(path_to_jar=self.stanford_path).tokenize(value)
+            # apply the regex to remove puntuation and also remove spaces as words
+            # TODO the regex also removes things like '-' in the word 'self-organizing'. Find out if this is a problem
+            text = [self.remove.sub(u" ", word).strip() for word in text]
             for word in text:
                 start = prevend
                 end = start + len(word)
