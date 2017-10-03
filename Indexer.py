@@ -40,7 +40,8 @@ class Indexer(object):
             year=STORED,
             title=STORED,
             # TODO: author_analyzer does not work here?
-            author_name=TEXT(), # Make sure accent folding is being used, stemming and variations not
+            #author_name=TEXT(self.author_analyzer), # Make sure accent folding is being used, stemming and variations not
+            author_name=TEXT(analyzer=self.author_analyzer),
             pdf_name=STORED,
         )
         """
