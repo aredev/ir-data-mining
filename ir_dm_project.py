@@ -4,7 +4,7 @@ from lda import LDA
 
 def main():
     # index = Indexer()
-    LDA().build_lda_model()
+    LDA().generate_dtm()
 
 
 if __name__ == "__main__":
