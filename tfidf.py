@@ -20,7 +20,7 @@ index = open_dir(indexdir)
 reader = index.reader()
 
 tfidf = gensim.models.TfidfModel.load('nips.tfidf_model')
-bow = [(100, 1), (101, 1)]
+
 print(tfidf.__getitem__(bow))
 
 # corpus = gensim.corpora.MalletCorpus('nips.mallet')
@@ -41,7 +41,7 @@ class Cosine(WeightingModel):
         # DTW = (1.0 + log(weight)) * idf
         # QMF = 1.0  # TODO: Fix this
         # QTW = ((0.5 + (0.5 * QTF / QMF))) * idf
-        return None
+        return self.cosine(doc_tfidf_vector, query_tfidf_vector)
 
     def get_term_freq_query(query):
         terms = re.split("\s", query)
@@ -55,10 +55,10 @@ class Cosine(WeightingModel):
 
     def get_query_tfidf(self, query):
         term_freqs = self.get_term_freq_query(query)
-        tfidf = {}
+        tfidf_dict = {}
         for t in term_freqs:
-            tfidf[t.key] = t.value * index.searcher.idf(t.key)
-        return tfidf
+            tfidf_dict[t.key] = t.value * index.searcher.idf(t.key)
+        return tfidf_dict
 
     # def get_term_freq_doc(docid):
     #     docnum = index.searcher.document_number(id=docid)  # searcher.document_number
@@ -69,7 +69,13 @@ class Cosine(WeightingModel):
     #     return term_freq
 
     def get_doc_tfidf(docnum):
-        return tfidf[docnum]
+        bow = reader.vector_as('frequency', docnum, 'content')
+        tfidf_vector = tfidf[bow]
+
+        tfidf_dict = {}
+        for word, score in tfidf_vector:
+            tfidf_dict[word] = score
+        return tfidf_dict
 
     def cosine(x, y):
         # always compare the longest document against the shortest
