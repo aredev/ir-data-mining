@@ -20,10 +20,23 @@ class DbHandler(object):
         results = self.conn.execute("SELECT * FROM " + table).fetchall()
         return len(results), results
 
-    def get_table_rows_author_paper_and_count(self):
-        cursor = self.conn.execute("SELECT paper_authors.id, paper_id, author_id, name, year, title, event_type, pdf_name, abstract, paper_text FROM paper_authors LEFT JOIN authors ON paper_authors.author_id = authors.id LEFT JOIN papers ON paper_authors.paper_id = papers.id LIMIT 500;" )
+    def get_table_rows_paper_and_count(self):
+        cursor = self.conn.execute("SELECT id, year, title, event_type, pdf_name, abstract, paper_text FROM papers LIMIT 500;" )
         results = cursor.fetchall()
         return len(results), results
+
+    def get_table_authors_as_dict(self):
+        cursor = self.conn.execute("SELECT paper_id, name FROM paper_authors LEFT JOIN authors ON paper_authors.author_id = authors.id;" )
+        results = cursor.fetchall()
+
+        paper_authors = {}
+        for paper_id, name in results:
+            if paper_id not in paper_authors:
+                paper_authors[paper_id] = name
+            else:
+                paper_authors[paper_id] = "{}, {}".format(paper_authors[paper_id], name)
+        return paper_authors
+
 
     def get_table_names(self):
         results = self.conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()

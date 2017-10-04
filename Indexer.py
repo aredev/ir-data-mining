@@ -43,7 +43,7 @@ class Indexer(object):
             title=STORED,
             # TODO: author_analyzer does not work here?
             #author_name=TEXT(self.author_analyzer), # Make sure accent folding is being used, stemming and variations not
-            author_name=TEXT(analyzer=self.author_analyzer, stored=True),
+            authors=TEXT(analyzer=self.author_analyzer, stored=True),
             pdf_name=STORED,
         )
         """
@@ -76,17 +76,20 @@ class Indexer(object):
         self.ix = create_in(self.index_path, self.schema)
         self.writer = self.ix.writer()
         # Add documents to the index
-        # "SELECT paper_authors.id, paper_id, author_id, name, year, title, event_type, pdf_name, abstract, paper_text FROM paper_authors ...
-        row_count, corpus = self.db_handler.get_table_rows_author_paper_and_count()
+        row_count, corpus = self.db_handler.get_table_rows_paper_and_count()
+        authors_per_paper = self.db_handler.get_table_authors_as_dict()
         try:
             for document in corpus:
-                _, docId, _, author_name, year, title, _, pdf_name, abstract, paper_text = document
-                print(docId, author_name, year, title, pdf_name, abstract)
+                # SELECT id, year, title, event_type, pdf_name, abstract, paper_text FROM papers
+                docId, year, title, _, pdf_name, abstract, paper_text = document
+
+                authors = authors_per_paper[docId]
+                print(docId, authors, year, title, pdf_name, abstract)
                 self.writer.add_document(docId=str(docId),
                                          year=year,
                                          title=title,
                                          pdf_name=pdf_name,
-                                         author_name=author_name,
+                                         authors=authors,
                                          content=paper_text)
             # Commit changes
             self.writer.commit()

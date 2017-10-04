@@ -11,7 +11,7 @@ from whoosh.qparser import QueryParser, MultifieldParser
 class AuthorMatcher(object):
     def __init__(self, index):
         self.index = index
-        self.parser = MultifieldParser(["content", "author_name"], self.index.schema)
+        self.parser = MultifieldParser(["content", "authors"], self.index.schema)
 
     def query(self, s):
         parsed = self.parser.parse(s)
