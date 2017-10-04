@@ -3,7 +3,7 @@ import os.path
 import sys
 from shutil import rmtree
 
-from whoosh.analysis import CharsetFilter, LowercaseFilter, StopFilter
+from whoosh.analysis import CharsetFilter, LowercaseFilter, StopFilter, SpaceSeparatedTokenizer
 from whoosh.fields import Schema, TEXT, ID, STORED
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
@@ -27,7 +27,7 @@ class Indexer(object):
         """
         self.analyzer = StanTokenizer() | LowercaseFilter() | WordnetLemmatizerFilter() | StopFilter()
 
-        self.author_analyzer = LowercaseFilter() | CharsetFilter(accent_map)
+        self.author_analyzer = SpaceSeparatedTokenizer() | LowercaseFilter() | CharsetFilter(accent_map)
         """
         The whoosh.fields.TEXT indexes the text and stores the term positions to allow phrase searching
         TEXT fields use StandardAnalyzer by default. 
@@ -36,12 +36,14 @@ class Indexer(object):
         """
         self.schema = Schema(
             docId=ID(stored=True),
+            #content=STORED,
+            content=TEXT(analyzer=self.author_analyzer),
             #content=TEXT(analyzer=self.analyzer), # TODO Only commented for speedup
             year=STORED,
             title=STORED,
             # TODO: author_analyzer does not work here?
             #author_name=TEXT(self.author_analyzer), # Make sure accent folding is being used, stemming and variations not
-            author_name=TEXT(analyzer=self.author_analyzer),
+            author_name=TEXT(analyzer=self.author_analyzer, stored=True),
             pdf_name=STORED,
         )
         """
@@ -79,13 +81,13 @@ class Indexer(object):
         try:
             for document in corpus:
                 _, docId, _, author_name, year, title, _, pdf_name, abstract, paper_text = document
-                print(docId, year, title, pdf_name, abstract)
+                print(docId, author_name, year, title, pdf_name, abstract)
                 self.writer.add_document(docId=str(docId),
                                          year=year,
                                          title=title,
                                          pdf_name=pdf_name,
-                                         author_name = author_name)
-                                         #content=paper_text)
+                                         author_name=author_name,
+                                         content=paper_text)
             # Commit changes
             self.writer.commit()
         except Exception as e:

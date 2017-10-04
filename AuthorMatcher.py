@@ -6,16 +6,16 @@ Created on Mon Sep 25 08:39:51 2017
 """
 
 from whoosh.matching import Matcher
-from whoosh.qparser import QueryParser
+from whoosh.qparser import QueryParser, MultifieldParser
 
 class AuthorMatcher(object):
     def __init__(self, index):
         self.index = index
-        self.parser = QueryParser("author_name", index.schema)
-    
+        self.parser = MultifieldParser(["content", "author_name"], self.index.schema)
+
     def query(self, s):
         parsed = self.parser.parse(s)
-        
+
         results_persistent = []
         with self.index.searcher() as searcher:
             results = searcher.search(parsed, limit=None) # Remove limit for speed improvement

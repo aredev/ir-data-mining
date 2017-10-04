@@ -27,6 +27,7 @@ print("Initializing index...")
 index = Indexer()
 matcher = AuthorMatcher(index.ix)
 
+
 async def retrieve_result(websocket, path):
     print("Received connection")
     user_msg = await websocket.recv()
