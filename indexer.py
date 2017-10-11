@@ -12,6 +12,7 @@ from nltk.tokenize import StanfordTokenizer
 from db_handler import DbHandler
 from filters.wordnet_lemmatizer import WordnetLemmatizerFilter
 from tokenizers.stanford import StanTokenizer
+import regex
 
 
 class Indexer(object):
@@ -20,6 +21,7 @@ class Indexer(object):
         self.stanford_path = os.path.abspath("libs/stanford-postagger.jar")
         self.stanford_tokenizer = StanfordTokenizer
         self.index_path = "index"
+        self.remove = regex.compile(r'[\p{C}|\p{M}|\p{P}|\p{S}|\p{Z}]+', regex.UNICODE)
         self.ix = None
         self.writer = None
         """
@@ -77,6 +79,7 @@ class Indexer(object):
                 docId, year, title, _, pdf_name, abstract, paper_text = document
                 # print(docId, year, title, pdf_name, abstract)
                 text = self.stanford_tokenizer(path_to_jar=self.stanford_path).tokenize(paper_text)
+                text = [self.remove.sub(u" ", word).strip() for word in text]
                 text = [x.lower() for x in text]
                 print(str(docId) + " en " + str(" ".join(text)))
                 f.write(str(docId) + " en " + str(" ".join(text)) + "\n")

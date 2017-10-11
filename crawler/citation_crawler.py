@@ -35,3 +35,5 @@ def get_citation_from_author(name):
             raise Exception("Splitted array does not contain three elements.")
     else:
         raise Exception("No such div found.")
+
+print(get_citation_from_author("Christof Paar"))

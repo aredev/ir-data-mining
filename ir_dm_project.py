@@ -1,10 +1,10 @@
-from Indexer import Indexer
+from indexer import Indexer
 from lda import LDA
 
 
 def main():
     # index = Indexer()
-    LDA().generate_dtm()
+    LDA().build_lda_model()
 
 
 if __name__ == "__main__":
