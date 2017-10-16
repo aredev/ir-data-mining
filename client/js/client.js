@@ -53,7 +53,7 @@ function guardConnection(ws) {
 }
 
 let ws = newConnection(),
-results = document.querySelector('#result-container');
+  results = document.querySelector('#result-container');
 guardConnection(ws);
 
 document.querySelector('#search-form').onsubmit = function() {
@@ -65,8 +65,8 @@ document.querySelector('#search-form').onsubmit = function() {
       let event = JSON.parse(event_raw.data);
 
       if (event.type === 'result') {
-        let result = document.createElement('a'),
-            result_html = '<h5>' + event.title + '</h5><br/><p>' + event.content + '</p>';
+        let result = document.createElement('div'),
+            result_html = '<a><h5>' + event.title + '</h5><br/><p>' + event.content + '</p></a><a>Authors</a><a>Related papers</a>';
 
         result.classList.add('list-group-item', 'list-group-item-action');
         result.innerHTML = result_html;
