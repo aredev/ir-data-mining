@@ -37,7 +37,7 @@ class Indexer(object):
         self.schema = Schema(
             docId=ID(stored=True),
             #content=STORED,
-            content=TEXT(analyzer=self.author_analyzer), # Don't store the text in the index. Slow retrieval.
+            content=TEXT(), # Don't store the text in the index. Slow retrieval.
             #content=TEXT(analyzer=self.analyzer), # TODO Only commented for speedup
             year=STORED,
             title=STORED,
