@@ -37,7 +37,7 @@ class Indexer(object):
         self.schema = Schema(
             docId=ID(stored=True),
             #content=STORED,
-            content=TEXT(analyzer=self.author_analyzer),
+            content=TEXT(analyzer=self.author_analyzer), # Don't store the text in the index. Slow retrieval.
             #content=TEXT(analyzer=self.analyzer), # TODO Only commented for speedup
             year=STORED,
             title=STORED,
@@ -79,12 +79,15 @@ class Indexer(object):
         row_count, corpus = self.db_handler.get_table_rows_paper_and_count()
         authors_per_paper = self.db_handler.get_table_authors_as_dict()
         try:
-            for document in corpus:
+            for d_i, document in enumerate(corpus):
                 # SELECT id, year, title, event_type, pdf_name, abstract, paper_text FROM papers
                 docId, year, title, _, pdf_name, abstract, paper_text = document
 
-                authors = authors_per_paper[docId]
-                print(docId, authors, year, title, pdf_name, abstract)
+                if (docId in authors_per_paper):
+                    authors = authors_per_paper[docId]
+                else:
+                    print("docId {} not found in authors dict".format(docId))
+                print("{:.2f}%".format(100 * (d_i + 1) / row_count))
                 self.writer.add_document(docId=str(docId),
                                          year=year,
                                          title=title,

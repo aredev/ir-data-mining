@@ -21,7 +21,7 @@ class DbHandler(object):
         return len(results), results
 
     def get_table_rows_paper_and_count(self):
-        cursor = self.conn.execute("SELECT id, year, title, event_type, pdf_name, abstract, paper_text FROM papers LIMIT 500;" )
+        cursor = self.conn.execute("SELECT id, year, title, event_type, pdf_name, abstract, paper_text FROM papers LIMIT 100;" )
         results = cursor.fetchall()
         return len(results), results
 
