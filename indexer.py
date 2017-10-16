@@ -4,7 +4,7 @@ import sys
 from shutil import rmtree
 
 from whoosh.analysis import LowercaseFilter, StopFilter
-from whoosh.fields import Schema, TEXT, ID, STORED
+from whoosh.fields import Schema, TEXT, ID, STORED, DATETIME
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
 from nltk.tokenize import StanfordTokenizer
@@ -12,7 +12,7 @@ from nltk.tokenize import StanfordTokenizer
 from db_handler import DbHandler
 from filters.wordnet_lemmatizer import WordnetLemmatizerFilter
 from tokenizers.stanford import StanTokenizer
-
+from cosineweighting import Cosine
 
 class Indexer(object):
     def __init__(self):
@@ -26,7 +26,7 @@ class Indexer(object):
         By default, the StandardAnalyzer() is used. This analzer is composed of a RegexTokenizer with a LowercaseFilter
         and an optional StopFilter (for removing stopwords)
         """
-        self.analyzer = StanTokenizer() | LowercaseFilter() | WordnetLemmatizerFilter() | StopFilter()
+        self.analyzer = StanTokenizer() | LowercaseFilter() | WordnetLemmatizerFilter()
         """
         The whoosh.fields.TEXT indexes the text and stores the term positions to allow phrase searching
         TEXT fields use StandardAnalyzer by default. 
@@ -37,7 +37,7 @@ class Indexer(object):
             docId=ID(stored=True),
             content=TEXT(analyzer=self.analyzer),
             year=STORED,
-            title=STORED,
+            title=TEXT,
             pdf_name=STORED,
         )
         """
@@ -48,6 +48,7 @@ class Indexer(object):
             # A valid index exists, reload the index
             self.__reload_index()
         else:
+            print("Not")
             # No valid index found, remove and recreate index
             rmtree(self.index_path, ignore_errors=True)
             self.__create_index()
@@ -70,17 +71,17 @@ class Indexer(object):
         self.writer = self.ix.writer()
         # Add documents to the index
         row_count, corpus = self.db_handler.get_table_rows_and_count("papers")
-        f = open('nips.mallet', 'w')
         try:
-            for document in corpus:
-                docId, year, title, _, pdf_name, abstract, paper_text = document
+            for document in range(0, 20):
+                docId, year, title, _, pdf_name, abstract, paper_text = corpus[document]
                 # print(docId, year, title, pdf_name, abstract)
                 text = self.stanford_tokenizer(path_to_jar=self.stanford_path).tokenize(paper_text)
                 text = [x.lower() for x in text]
+                self.writer.add_document(docId = str(docId), content = text, year = year, title = title, pdf_name = pdf_name)
+                #if docId%200 == 0:
                 print(str(docId) + " en " + str(" ".join(text)))
-                f.write(str(docId) + " en " + str(" ".join(text)) + "\n")
             # Commit changes
-            f.close()
+            self.writer.commit()
         except Exception as e:
             # Formatted printing exception
             exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -100,6 +101,7 @@ class Indexer(object):
         with self.ix.searcher() as searcher:
             parser = QueryParser("content", self.ix.schema)
             query = parser.parse(query)
+            print(query)
             results = searcher.search(query)
             print(len(results))
             if len(results) > 0:
