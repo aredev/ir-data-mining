@@ -3,25 +3,14 @@
 from whoosh.fields import Schema, TEXT, ID, STORED
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
-from whoosh.scoring import WeightingModel
+from whoosh.scoring import WeightingModel, BaseScorer
 from whoosh.searching import Searcher
 import gensim
 
 import re
 from math import sqrt
-from math import log
 #import matplotlib
 
-import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-indexdir = 'index'
-
-index = open_dir(indexdir)
-reader = index.reader()
-
-tfidf = gensim.models.TfidfModel.load('nips.tfidf_model')
-
-print(tfidf.__getitem__(bow))
 
 # corpus = gensim.corpora.MalletCorpus('nips.mallet')
 #
@@ -29,19 +18,34 @@ print(tfidf.__getitem__(bow))
 # #print(tfidf[0])
 # tfidf.save('nips.tfidf_model')
 
-class Cosine(WeightingModel):
+class CosineWeighter(WeightingModel):
     """A cosine vector-space scoring algorithm, translated into Python
     from Terrier's Java implementation.
     """
 
-    def score(self, searcher, fieldnum, text, docnum, weight, QTF=1):
-        doc_tfidf_vector = self.get_doc_tfidf(docnum)#searcher.idf(fieldnum, text)
-        query_tfidf_vector = self.get_query_tfidf(text)
+    def scorer(self, searcher, fieldname, text, qf=1):
+        pass
 
-        # DTW = (1.0 + log(weight)) * idf
-        # QMF = 1.0  # TODO: Fix this
-        # QTW = ((0.5 + (0.5 * QTF / QMF))) * idf
-        return self.cosine(doc_tfidf_vector, query_tfidf_vector)
+
+class CosineScorer(BaseScorer):
+
+    def score(self, matcher):
+        return _score(searcher, fieldname, text, docnum)
+
+    def _score(self, searcher, fieldname, text, docnum): #docnum
+        print("Computing score with " + self.query)
+        doc_tfidf_vector = self.get_doc_tfidf(docnum, searcher)  # searcher.idf(fieldnum, text)
+        query_tfidf_vector = self.get_query_tfidf(text)
+        score = self.cosine(doc_tfidf_vector, query_tfidf_vector)
+        print("score " + str(score))
+        return score
+
+    def __init__(self, query):
+        self.query = query
+        print(query)
+
+    def __index__(self):
+        self.tfidf = gensim.models.TfidfModel.load('nips.tfidf_model')
 
     def get_term_freq_query(query):
         terms = re.split("\s", query)
@@ -68,10 +72,9 @@ class Cosine(WeightingModel):
     #         term_freq[t[0]] = t[1]
     #     return term_freq
 
-    def get_doc_tfidf(docnum):
-        bow = reader.vector_as('frequency', docnum, 'content')
-        tfidf_vector = tfidf[bow]
-
+    def get_doc_tfidf(self, docnum, searcher):
+        bow = searcher.vector_as('frequency', docnum, 'content')
+        tfidf_vector = self.tfidf[bow]
         tfidf_dict = {}
         for word, score in tfidf_vector:
             tfidf_dict[word] = score
