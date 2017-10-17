@@ -5,13 +5,15 @@ import sklearn.cluster as skcluster
 
 
 class GraphCluster:
+    #i = 10
 
     def __init__(self, graph):
         self.graph = graph
-        self.path_dict = dict()
+        self.path_dict = path_dict = nx.all_pairs_shortest_path_length(self.graph)
 
-    def shortest_path_dict(self):
-        return nx.all_pairs_shortest_path_length(self.graph)
+    # This function should be extended
+    def cluster_graph(self):
+        return self.graph
 
     # Colors nodes based on the labels. The order of the labels must match the order of the nodes
     def plot_graph(self, filename, labels="black"):
@@ -22,15 +24,14 @@ class GraphCluster:
         plt.clf()
 
     # The matrix conversion does not handle unconnected graphs.
-    def path_dict_to_matrix(self, path_dict):
-        keys = sorted(path_dict.keys(), key=int)
+    def path_dict_to_matrix(self, keys):
+        keys = sorted(keys, key=int)
         matrix = np.zeros((len(keys), len(keys)))
         i = 0
-        for key1 in keys[:-1]:
+        for key1 in keys:
             j = 0
-            for key2 in keys[i:]:
-                matrix[i][j] = path_dict[key1][key2]
-                matrix[j][i] = matrix[i][j]
+            for key2 in keys:
+                matrix[i][j] = self.path_dict[key1][key2]
                 j += 1
             i += 1
         return np.matrix(matrix)
@@ -41,7 +42,7 @@ class GraphCluster:
         print(path_dict)
         print("items: " + str(path_dict.items()))
         print("values: " + str(path_dict.values()))
-        row_ind = []
+        row_ind =[]
         col_ind = []
         data = []
 
@@ -73,7 +74,9 @@ class GraphCluster:
         db = skcluster.DBSCAN(eps=1, metric="precomputed", algorithm="ball trees").fit(self.path_dict_to_sparse_matrix(path_dict))
         return db.labels_
 
-    # dbscan clustering using computing all complete subgraphs separately.
+    # dbscan clustering but only for the biggest sub graph.
+    # need to fix division of subgraphs.
+    # need to fix addition of subgraphs and rearranging the labels.
     def cluster_dbscan(self, min_node_threshold=0):
         graph_list = nx.connected_component_subgraphs(self.graph)
         nr_of_graphs = nx.number_connected_components(self.graph)
@@ -84,14 +87,14 @@ class GraphCluster:
 
         progress_counter = 1
         for subgraph in graph_list:
-            print("Progress: " + str(progress_counter) +"/"+ str(nr_of_graphs))
+            print("Progress: " + str(progress_counter) + "/" + str(nr_of_graphs))
             progress_counter += 1
             if len(subgraph) > min_node_threshold:
-                # path_dict = nx.all_pairs_shortest_path_length(subgraph)
-                path_dict = nx.all_pairs_dijkstra_path_length(subgraph)
-                dist_matrix = GraphCluster(self.graph).path_dict_to_matrix(path_dict)
+                #path_dict = nx.all_pairs_dijkstra_path_length(subgraph)
+                keys = nx.nodes(subgraph)
+                dist_matrix = GraphCluster(self.graph).path_dict_to_matrix(keys)
                 db = skcluster.DBSCAN(eps=1, metric="precomputed").fit(dist_matrix)
-                index_list.extend(path_dict.keys())
+                index_list.extend(keys)
                 for label in db.labels_:
                     if label == -1:
                         label_list.append(label)
@@ -113,4 +116,6 @@ class GraphCluster:
         dist_matrix = GraphCluster(self.graph).path_dict_to_matrix(shortest_path_dict)
         db = skcluster.AgglomerativeClustering(n_clusters=2, affinity="precomputed", linkage="complete").fit(dist_matrix)
         return db.labels_
+
+
 

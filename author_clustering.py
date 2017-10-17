@@ -1,28 +1,70 @@
 import csv
 import networkx as nx
+import pickle
+
 import graph_cluster as gc
+import datetime
 
 
 class AuthorClustering:
 
-    def __init__(self, cache_enabled=False, label_cache_filename="label_cache.csv"):
+    def __init__(self, cache_enabled=False, label_cache_filename="data\label_cache.csv"):
         self.LABEL_CACHE = label_cache_filename
-
+        start = datetime.datetime.now()
+        print(start)
         # TESTING ENABLED
         self.author_dict, self.author_graph = self.load_csv()
+        #self.author_graph = self.make_fake_graph()
         self.labels = []
-        # self.author_graph = self.make_fake_graph()
+        self.nodes = nx.nodes(self.author_graph)
         if cache_enabled:
             self.labels = self.load_label_cache()
-        if not cache_enabled or not len(self.labels) == len(nx.nodes(self.author_graph)):
-            self.labels = gc.GraphCluster(self.author_graph).cluster_dbscan()
-            self.save_labels_csv(self.labels)
-        print(str(len(self.labels)) + " labels: " + str(self.labels))
-        print(str(len(nx.nodes(self.author_graph))) + " nodes: " + str(nx.nodes(self.author_graph)))
-        gc.GraphCluster(self.author_graph).plot_graph("dummy", self.labels)
+            self.path_dict = self.load_obj("path_dict")
+
+        if not cache_enabled or not len(self.labels) == len(self.nodes):
+            graph_cluster = gc.GraphCluster(self.author_graph)
+            self.labels = graph_cluster.cluster_dbscan()
+            self.path_dict = graph_cluster.shortest_path_dict()
+            self.save_obj(self.path_dict, "path_dict")
+            self.save_labels_csv()
+
+        print(str(datetime.datetime.now() - start))
+        print(self.find_nearest_neighbour("2"))
+
+        #print(str(len(self.labels)) + " labels: " + str(self.labels))
+        #print(str(len(nx.nodes(self.author_graph))) + " nodes: " + str(nx.nodes(self.author_graph)))
+        #gc.GraphCluster(self.author_graph).plot_graph("dummy", self.labels)
+
+    # This function loads labels as list of integers form the cache
+    def load_label_cache(self):
+        try:
+            with open(self.LABEL_CACHE, 'r', encoding="utf8", newline='') as csvfile:
+                label_reader = csv.reader(csvfile, delimiter=',')
+                return [int(label) for label in next(label_reader)]
+        except EnvironmentError:
+            print("ERROR: Cache could not be opened.")
+            return []
+
+    # This function returns a list of nodes in the cluster of a given node (excluding the given node).
+    # The label_list should be equally long as the node_list
+    def find_cluster_of_node(self, search_node):
+        node_index = self.nodes.index(search_node)
+        match_label = self.labels[node_index]
+        return [node for node, label in zip(self.nodes, self.labels) if label == match_label and not node == search_node]
+
+    # This function writes a list of labels to file.
+    def save_labels_csv(self):
+        try:
+            with open(self.LABEL_CACHE, 'w', encoding="utf8", newline='') as cache_file:
+                wr = csv.writer(cache_file, delimiter=',')
+                labels = [str(label) for label in self.labels]
+                wr.writerow(labels)
+        except EnvironmentError:
+            print("ERROR: saving labels to cache failed.")
 
     # The load csv function reads all the authors and enters them sorted in the graph.
     # This function assumes that there are no edges with unknown nodes. This could cause the nodes to be unsorted.
+
     def load_csv(self):
         author_dict = {}
         author_graph = nx.Graph()
@@ -60,25 +102,17 @@ class AuthorClustering:
 
         return author_dict, author_graph
 
-    # This function writes a list of labels to file.
-    def save_labels_csv(self, labels):
-        with open(self.LABEL_CACHE, 'w', encoding="utf8", newline='') as cache_file:
-            wr = csv.writer(cache_file, delimiter=',')
-            labels = [str(label) for label in labels]
-            wr.writerow(labels)
+    def find_nearest_neighbour(self, node):
+        neighbour_dict = self.path_dict[node]
+        closest = node
+        for neighbour in neighbour_dict.keys():
+            if (neighbour_dict[closest] > neighbour_dict[neighbour] or closest == node) and not neighbour == node:
+                closest = neighbour
+        return closest
 
-    # This function loads labels as list of integers form the cache
-    def load_label_cache(self):
-        with open(self.LABEL_CACHE, 'r', encoding="utf8", newline='') as csvfile:
-            label_reader = csv.reader(csvfile, delimiter=',')
-            return [int(label) for label in next(label_reader)]
-
-    # This function returns a list of nodes in the cluster of a given node (including the given node).
-    # The label_list should be equally long as the node_list
-    def find_cluster_of_node(self, node, node_list, label_list):
-        node_index = node_list.index(node)
-        match_label = label_list[node_index]
-        return [node for node, label in zip(node_list, label_list) if label == match_label]
+    #TODO: implement
+    def find_authors_by_doc(self):
+        return []
 
     # This function is for quick testing. It can be removed in the final version.
     def make_fake_graph(self):
@@ -115,3 +149,12 @@ class AuthorClustering:
         dummy_graph.add_edge(17, 20, weight=1)
         return dummy_graph
 
+
+    def save_obj(self, obj, name):
+        with open('data/'+ name + '.pkl', 'wb') as f:
+            pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+
+    def load_obj(self, name):
+        with open('data/' + name + '.pkl', 'rb') as f:
+            return pickle.load(f)
