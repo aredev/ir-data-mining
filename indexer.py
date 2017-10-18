@@ -72,14 +72,11 @@ class Indexer(object):
         # Add documents to the index
         row_count, corpus = self.db_handler.get_table_rows_and_count("papers")
         try:
-            for document in range(0, 20):
-                docId, year, title, _, pdf_name, abstract, paper_text = corpus[document]
-                # print(docId, year, title, pdf_name, abstract)
-                text = self.stanford_tokenizer(path_to_jar=self.stanford_path).tokenize(paper_text)
-                text = [x.lower() for x in text]
-                self.writer.add_document(docId = str(docId), content = text, year = year, title = title, pdf_name = pdf_name)
-                #if docId%200 == 0:
-                print(str(docId) + " en " + str(" ".join(text)))
+            for document in corpus:
+                docId, year, title, _, pdf_name, abstract, paper_text = document
+                print(docId, year, title, pdf_name, abstract)
+                self.writer.add_document(docId=str(docId), year=str(year), title=title, pdf_name=pdf_name,
+                                         content=paper_text)
             # Commit changes
             self.writer.commit()
         except Exception as e:
