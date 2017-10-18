@@ -33,8 +33,8 @@ class Indexer(object):
         self.schema = Schema(
             docId=ID(stored=True),
             content=TEXT(analyzer=self.analyzer),
-            year=STORED,
-            title=STORED,
+            year=TEXT(stored=True),
+            title=TEXT(stored=True),
             pdf_name=STORED,
         )
         """
