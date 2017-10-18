@@ -42,7 +42,7 @@ class Indexer(object):
         """
         # TODO remove "and False" cuz this is a debug statement
         exists = exists_in(self.index_path)
-        if exists:
+        if exists and False:
             # A valid index exists, reload the index
             self.__reload_index()
         else:
@@ -72,7 +72,7 @@ class Indexer(object):
             for document in corpus:
                 docId, year, title, _, pdf_name, abstract, paper_text = document
                 print(docId, year, title, pdf_name, abstract)
-                self.writer.add_document(docId=str(docId), year=year, title=title, pdf_name=pdf_name,
+                self.writer.add_document(docId=str(docId), year=str(year), title=title, pdf_name=pdf_name,
                                          content=paper_text)
             # Commit changes
             self.writer.commit()
