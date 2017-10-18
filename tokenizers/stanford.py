@@ -1,5 +1,5 @@
 import os
-from nltk.tokenize import StanfordTokenizer
+from nltk.tokenize import StanfordTokenizer, sent_tokenize
 from nltk.tag import StanfordPOSTagger
 from whoosh.analysis import Composable, Token
 from whoosh.compat import text_type
@@ -44,36 +44,43 @@ class StanTokenizer(Composable):
         else:
             prevend = 0
             pos = start_pos
-            tokenized_text = self.stanford_tokenizer.tokenize(value)
-            tagged_tokenized_text = self.stanford_tagger.tag(tokenized_text)
-            # TODO the regex also removes things like '-' in the word 'self-organizing'. Find out if this is a problem
-            # apply the regex to remove punctuation and also remove spaces as words
-            tagged_tokenized_text = [(self.remove.sub(u" ", word[0]).strip(), word[1]) for word in
-                                     tagged_tokenized_text]
             """
-            As we removed the tokens that were punctuation, we have to remove the tokens that don't have an empty first element.
-            This can be done using the "all()" function, which returns False only if all values in t1 are non-empty/nonzero.
-            See https://stackoverflow.com/questions/31154372/what-is-the-best-way-to-check-if-a-tuple-has-any-empty-none-values-in-python
+            To prevent out of memory errors, we first tokenize the text into sentences.
+            We then tokenize each of the sentences and then apply postagging.
             """
-            tagged_tokenized_text = list(filter(lambda x: all(x), tagged_tokenized_text))
-            for (word, pos_tag) in tagged_tokenized_text:
-                start = prevend
-                end = start + len(word)
-                if word:
-                    t.text = word
-                    t.pos_tag = self._penn2morphy(pos_tag)
-                    t.boost = 1.0
-                    if keeporiginal:
-                        t.original = t.text
-                    t.stopped = False
-                    if positions:
-                        t.pos = pos
-                        pos += 1
-                    if chars:
-                        t.startchar = start_char + start
-                        t.endchar = start_char + end
-                    prevend = start + len(word)
-                    yield t
+            sentences = sent_tokenize(value)
+            tokenized_sentences = self.stanford_tokenizer.tokenize_sents(sentences)
+            tagged_tokenized_sentences = self.stanford_tagger.tag_sents(tokenized_sentences)
+            """
+            For each sentence, we loop through the words in this sentence.
+            For each word, we apply the regex to remove punctuation.
+            This leads to the empty string if the word only consisted of punctuation.
+            """
+            tagged_tokenized_sentences = map(
+                lambda sent: map(lambda word: (self.remove.sub(u" ", word[0]).strip(), word[1]), sent),
+                tagged_tokenized_sentences)
+            for sentence in tagged_tokenized_sentences:
+                # We only consider words that have all values in the tuple set
+                for (word, pos_tag) in filter(lambda x: all(x), sentence):
+                    print("word:{}, pos-tag:{}".format(word, pos_tag))
+                    start = prevend
+                    end = start + len(word)
+                    if word:
+                        t.text = word
+                        # Transform the postags.
+                        t.pos_tag = self._penn2morphy(pos_tag)
+                        t.boost = 1.0
+                        if keeporiginal:
+                            t.original = t.text
+                        t.stopped = False
+                        if positions:
+                            t.pos = pos
+                            pos += 1
+                        if chars:
+                            t.startchar = start_char + start
+                            t.endchar = start_char + end
+                        prevend = start + len(word)
+                        yield t
 
     def _penn2morphy(self, penntag, return_none=False):
         """

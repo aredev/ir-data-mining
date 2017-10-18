@@ -16,6 +16,8 @@ from cosine import CosineSim
 import db_handler as db
 
 
+import psutil
+
 
 class Indexer(object):
     def __init__(self):
@@ -76,6 +78,16 @@ class Indexer(object):
         """
         os.mkdir(self.index_path)
         self.ix = create_in(self.index_path, self.schema)
+        """
+        Optimization, we automatically determine the number of processors to use.
+        We also determine the amount of RAM that is available and set that as a threshold.
+        """
+        values = psutil.virtual_memory()
+        # to display in MB format, bitshift right with 20. For GB format, shift with 30.
+        available_free_ram = values.available >> 20
+        # use 80 percent of the available ram
+        available_free_ram *= 0.8
+        # self.writer = self.ix.writer(procs=psutil.cpu_count(), limitmb=available_free_ram, multisegment=True)
         self.writer = self.ix.writer()
         # Add documents to the index
         row_count, corpus = self.db_handler.get_table_rows_and_count("papers")
@@ -103,6 +115,14 @@ class Indexer(object):
             # Remove the index
             rmtree(self.index_path, ignore_errors=True)
 
+        """
+        So, while multisegment=True is much faster than a normal writer, you should only use it for 
+        large batch indexing jobs (or perhaps only for indexing from scratch). 
+        It should not be the only method you use for indexing, 
+        because otherwise the number of segments will tend to increase forever!
+        """
+        self.writer = self.ix.writer()
+
     def from_hit_to_dict(self, hit, score):
         return {
             'docId': hit['docId'],
@@ -110,6 +130,7 @@ class Indexer(object):
             'year': hit['year'],
             'score': score
         }
+
 
     def search(self, query, field="content"):
         """
