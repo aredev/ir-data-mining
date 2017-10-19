@@ -11,26 +11,33 @@ import gensim
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
+
 class CosineSim():
-    def __init__(self, searcher, q):
-        self.query = q
-        self.searcher = searcher
-        # self.corpus = gensim.corpora.MalletCorpus('nips.corpus')
-        self.corpus = gensim.corpora.malletcorpus.MalletCorpus('nips.mallet')
-        gensim.corpora.MalletCorpus.serialize(fname='nips.corpus', corpus=self.corpus )
+    def __init__(self):
+        self.query = ""
+        self.searcher = None
+        self.query_tfidf_vector = None
+
+        #self.corpus = gensim.corpora.MalletCorpus('nips.corpus')
+        self.corpus = gensim.corpora.MalletCorpus('nips.mallet')
+        # gensim.corpora.MalletCorpus.serialize(fname='nips.corpus', corpus=self.corpus )
         # corpus.save('nips.malletcorpus')
         self.dict = Dictionary.load('nips.dict')
         print('corpus done')
-        # self.tfidf = gensim.models.TfidfModel.load('nips.tfidf_model')
+        self.tfidf = gensim.models.TfidfModel.load('nips.tfidf_model')
 
         # print(tfidf[[('the',1)]])
 
         self.tfidf = gensim.models.TfidfModel(self.corpus, id2word=self.corpus.id2word, dictionary=self.dict)
         # tfidf.save('nips.tfidf_model')
 
-        print("test tfidf ", self.tfidf[[('the',1)]])
-        self.query_tfidf_vector = self.get_query_tfidf(self.query)
+        print("test tfidf ", self.tfidf[[('the', 1)]])
         print("bla")
+
+    def set_query_and_searcher(self, searcher, query):
+        self.query = query
+        self.searcher = searcher
+        self.query_tfidf_vector = self.get_query_tfidf(self.query)
 
     def get_query_tfidf(self, query):
         term_freq = {}
@@ -52,8 +59,8 @@ class CosineSim():
         return tfidf
 
     def get_doc_tfidf(self, docnum, searcher):
-        doc = self.corpus.docbyoffset(docnum)
-        print (docnum, doc)
+        doc = self.corpus.line2doc(docnum)
+        print(str(docnum) + " :" + str(doc))
         #bow = Dictionary.doc2bow(doc)
         tfidf_vector = self.tfidf[doc]
         # tfidf_dict = {}

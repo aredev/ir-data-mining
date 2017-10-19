@@ -14,9 +14,13 @@ from filters.wordnet_lemmatizer import WordnetLemmatizerFilter
 from tokenizers.stanford import StanTokenizer
 from cosine import CosineSim
 
+
 class Indexer(object):
     def __init__(self):
         self.db_handler = DbHandler()
+        #fixme:
+        # self.cosine = CosineSim()
+
         self.stanford_path = os.path.abspath("libs/stanford-postagger.jar")
         self.stanford_tokenizer = StanfordTokenizer
         self.index_path = "index"
@@ -45,6 +49,7 @@ class Indexer(object):
         """
         exists = exists_in(self.index_path)
         if exists:
+            print("exists")
             # A valid index exists, reload the index
             self.__reload_index()
         else:
@@ -72,7 +77,7 @@ class Indexer(object):
         # Add documents to the index
         row_count, corpus = self.db_handler.get_table_rows_and_count("papers")
         try:
-            for document in corpus:
+            for document in corpus[0:5]:
                 docId, year, title, _, pdf_name, abstract, paper_text = document
                 print(docId, year, title, pdf_name, abstract)
                 self.writer.add_document(docId=str(docId), year=str(year), title=title, pdf_name=pdf_name,
@@ -89,21 +94,36 @@ class Indexer(object):
             # Remove the index
             rmtree(self.index_path, ignore_errors=True)
 
-    def search(self, query):
+    def from_hit_to_dict(self, hit, index):
+        return {
+            'docId': hit['docId'],
+            'title': hit['title'],
+            'year': hit['year'],
+            'order': index
+        }
+
+    def search(self, query, field="content"):
         """
         Search using a given query
+        :param field: 
         :param query: a query
         :return:
         """
         with self.ix.searcher() as searcher:
-            parser = QueryParser("content", self.ix.schema, group=syntax.OrGroup)
+            parser = QueryParser(field, self.ix.schema, group=syntax.OrGroup)
             query = parser.parse(query)
-            print(query)
-            similarityScorer = CosineSim(searcher, query)
-            results = searcher.search(query, limit=None, scored=False, sortedby=False, terms=True)
-            print(len(results))
-            scoredResults ={}
+            # self.cosine.set_query_and_searcher(searcher, query)
+            # results = searcher.search(query, limit=None, scored=False, sortedby=False, terms=True)
+            results = searcher.search(query)
+            print("Number of results: " + str(len(results)))
+            scored_results = {}
+
+            results_in_dict = []
             if len(results) > 0:
-                for r in results:
+                for idx, r in enumerate(results):
                     print(r.docnum)
-                    scoredResults[r.docnum] = similarityScorer.similarity(r.docnum+1)
+                    results_in_dict.append(self.from_hit_to_dict(r, idx))
+                    #fixme:
+                    # scored_results[r.docnum] = self.cosine.similarity(r.docnum+1)
+
+            return results_in_dict

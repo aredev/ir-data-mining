@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block stats %}
+
+{{nr_of_results}} results in {{time}} microseconds
+
+{% endblock %}
+
+{% block results %}
+{% for result in results %}
+<div class="alert alert-success" role="alert">
+    <h4 class="alert-heading">{{ result.title }}</h4>
+    <b>Written by:</b>
+    {% for author in result.authors %}
+        <p>{{ author }} </p>
+    {% endfor %}
+    <hr>
+    {% for topic in result.topics %}
+        <p class="mb-0">{{topic}}</p>
+    {% endfor %}
+    <hr>
+
+    <b>Suggested authors:</b>
+    {% for _, author in result.suggested_authors %}
+        <p class="mb-0">{{author}}</p>
+    {% endfor %}
+</div>
+{% endfor %}
+{% endblock %}

@@ -10,8 +10,6 @@ class AuthorClustering:
 
     def __init__(self, cache_enabled=False, label_cache_filename="data\label_cache.csv"):
         self.LABEL_CACHE = label_cache_filename
-        start = datetime.datetime.now()
-        print(start)
         # TESTING ENABLED
         self.author_dict, self.author_graph = self.load_csv()
         #self.author_graph = self.make_fake_graph()
@@ -27,10 +25,7 @@ class AuthorClustering:
             self.path_dict = graph_cluster.shortest_path_dict()
             self.save_obj(self.path_dict, "path_dict")
             self.save_labels_csv()
-        print(str(datetime.datetime.now() - start))
-        #print(self.path_dict["6368"])
-        #print(self.path_dict)
-        #print(nx.nodes(sorted(nx.connected_component_subgraphs(self.author_graph), key=len, reverse=True)[0]))
+
 
     # This function loads labels as list of integers form the cache
     def load_label_cache(self):
@@ -130,13 +125,12 @@ class AuthorClustering:
     # process. Pairwise nearest neighbour might return different results based on the order of the query authors.
     def find_authors_by_paper(self, paper_id):
         paper_authors = db.DbHandler().get_authors_by_paper_id(paper_id)
-        print("authors: " + str(paper_authors))
         result_authors = []
         for author in paper_authors:
             closest = self.find_nearest_neighbour(author, result_authors+paper_authors)
             if not closest == author:
-                result_authors.append(closest)
-        return result_authors
+                result_authors.append((closest, db.DbHandler().get_author_by_id(closest)))
+        return [db.DbHandler().get_author_by_id(pa) for pa in paper_authors], result_authors
 
     # This function is for quick testing. It can be removed in the final version.
     def make_fake_graph(self):
