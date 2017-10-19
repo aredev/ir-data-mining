@@ -1,0 +1,4 @@
+java -mx300m -cp stanford-postagger-withModel.jar edu.stanford.nlp.tagger.maxent.MaxentTagger -model edu\stanford\nlp\models\pos-tagger\english-bidirectional\english-bidirectional-distsim.tagger -textFile sample-input.txt
+
+CoreNLPTagger voor het taggen van getokenize text.
+CoreNLPTokenizer voor het tokenizen van text.

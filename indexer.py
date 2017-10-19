@@ -75,18 +75,21 @@ class Indexer(object):
         # to display in MB format, bitshift right with 20. For GB format, shift with 30.
         available_free_ram = values.available >> 20
         # use 80 percent of the available ram
-        available_free_ram *= 0.8
-        # self.writer = self.ix.writer(procs=psutil.cpu_count(), limitmb=available_free_ram, multisegment=True)
-        self.writer = self.ix.writer()
+        available_free_ram *= 0.4
+        self.writer = self.ix.writer(procs=psutil.cpu_count(), limitmb=available_free_ram, multisegment=True)
+        # self.writer = self.ix.writer()
+        # To find out which terms are in the vocabulary, see
+        # https://stackoverflow.com/questions/35565900/how-do-i-get-the-list-of-all-terms-in-a-whoosh-index
+        # Read this: https://www.ocf.berkeley.edu/~tzhu/senate/Whoosh-2.4.1/docs/build/html/_sources/indexing.txt
         # Add documents to the index
         row_count, corpus = self.db_handler.get_table_rows_and_count("papers")
         try:
-            for document in corpus:
+            for document in corpus[:2]:
                 docId, year, title, _, pdf_name, abstract, paper_text = document
                 print(docId, year, title, pdf_name, abstract)
                 self.writer.add_document(docId=str(docId), year=str(year), title=title, pdf_name=pdf_name,
                                          content=paper_text)
-            # Commit changes
+            # Commit changes. NOTE this is a very slow operation, not sure how this can be fixed
             self.writer.commit()
         except Exception as e:
             # Formatted printing exception
@@ -95,6 +98,7 @@ class Indexer(object):
             print(exc_type, fname, exc_tb.tb_lineno)
             # In addition, we also print the normal exception
             print(e)
+            self.writer.cancel()
             # Remove the index
             rmtree(self.index_path, ignore_errors=True)
 
