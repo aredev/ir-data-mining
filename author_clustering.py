@@ -1,7 +1,7 @@
 import csv
 import networkx as nx
 import pickle
-
+import db_handler as db
 import graph_cluster as gc
 import datetime
 
@@ -27,13 +27,10 @@ class AuthorClustering:
             self.path_dict = graph_cluster.shortest_path_dict()
             self.save_obj(self.path_dict, "path_dict")
             self.save_labels_csv()
-
         print(str(datetime.datetime.now() - start))
-        print(self.find_nearest_neighbour("2"))
-
-        #print(str(len(self.labels)) + " labels: " + str(self.labels))
-        #print(str(len(nx.nodes(self.author_graph))) + " nodes: " + str(nx.nodes(self.author_graph)))
-        #gc.GraphCluster(self.author_graph).plot_graph("dummy", self.labels)
+        #print(self.path_dict["6368"])
+        #print(self.path_dict)
+        #print(nx.nodes(sorted(nx.connected_component_subgraphs(self.author_graph), key=len, reverse=True)[0]))
 
     # This function loads labels as list of integers form the cache
     def load_label_cache(self):
@@ -64,7 +61,6 @@ class AuthorClustering:
 
     # The load csv function reads all the authors and enters them sorted in the graph.
     # This function assumes that there are no edges with unknown nodes. This could cause the nodes to be unsorted.
-
     def load_csv(self):
         author_dict = {}
         author_graph = nx.Graph()
@@ -92,6 +88,7 @@ class AuthorClustering:
 
                             author_graph.add_edge(author, row[2],
                                                   weight=weight / 2)  # TODO: investigate effect of this weighting
+                            #print(str(row[2]) + " -> " +str(author) + " prev weight: " + str(weight/2))
                         else:
                             author_graph.add_edge(author, row[2], weight=1)
 
@@ -102,17 +99,44 @@ class AuthorClustering:
 
         return author_dict, author_graph
 
-    def find_nearest_neighbour(self, node):
+    # This function finds the nearest neighbour of an node excluding a set of nodes.
+    def find_nearest_neighbour(self, node, excluding):
         neighbour_dict = self.path_dict[node]
         closest = node
-        for neighbour in neighbour_dict.keys():
+        neighbours = [n for n in neighbour_dict.keys() if n not in excluding]
+        for neighbour in neighbours:
             if (neighbour_dict[closest] > neighbour_dict[neighbour] or closest == node) and not neighbour == node:
                 closest = neighbour
         return closest
 
-    #TODO: implement
-    def find_authors_by_doc(self):
-        return []
+    def total_dist(self, nodes, node):
+        dist = 0.0
+        for neighbour in nodes:
+            dist += self.path_dict[neighbour][node]
+        return dist
+    """
+    # This function gives the n nodes with the least total distance from the query nodes.
+    def find_total_nearest_neighbour(self, nodes, n):
+        neighbour_dict = self.path_dict[node]
+        closest = []
+        neighbours = [n for n in neighbour_dict.keys() if n not in nodes]
+        for neighbour in neighbours:
+            closest.append((neighbour, ))
+        return closest
+        """
+
+
+    # This function finds the pairwise nearest neighbours for a group of authors (excluding already found authors in the
+    # process. Pairwise nearest neighbour might return different results based on the order of the query authors.
+    def find_authors_by_paper(self, paper_id):
+        paper_authors = db.DbHandler().get_authors_by_paper_id(paper_id)
+        print("authors: " + str(paper_authors))
+        result_authors = []
+        for author in paper_authors:
+            closest = self.find_nearest_neighbour(author, result_authors+paper_authors)
+            if not closest == author:
+                result_authors.append(closest)
+        return result_authors
 
     # This function is for quick testing. It can be removed in the final version.
     def make_fake_graph(self):
@@ -149,11 +173,9 @@ class AuthorClustering:
         dummy_graph.add_edge(17, 20, weight=1)
         return dummy_graph
 
-
     def save_obj(self, obj, name):
         with open('data/'+ name + '.pkl', 'wb') as f:
             pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
-
 
     def load_obj(self, name):
         with open('data/' + name + '.pkl', 'rb') as f:

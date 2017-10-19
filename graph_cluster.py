@@ -11,7 +11,7 @@ class GraphCluster:
         self.path_dict = dict()
 
     def shortest_path_dict(self):
-        return nx.all_pairs_shortest_path_length(self.graph)
+        return nx.all_pairs_dijkstra_path_length(self.graph)
 
     # Colors nodes based on the labels. The order of the labels must match the order of the nodes
     def plot_graph(self, filename, labels="black"):
