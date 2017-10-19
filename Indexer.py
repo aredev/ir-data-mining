@@ -6,13 +6,13 @@ from shutil import rmtree
 from whoosh.analysis import LowercaseFilter, StopFilter
 from whoosh.fields import Schema, TEXT, ID, STORED, DATETIME
 from whoosh.index import create_in, exists_in, open_dir
-from whoosh.qparser import QueryParser
+from whoosh.qparser import QueryParser, syntax
 from nltk.tokenize import StanfordTokenizer
 
 from db_handler import DbHandler
 from filters.wordnet_lemmatizer import WordnetLemmatizerFilter
 from tokenizers.stanford import StanTokenizer
-from cosineweighting import Cosine
+from cosine import CosineSim
 
 class Indexer(object):
     def __init__(self):
@@ -101,11 +101,14 @@ class Indexer(object):
         :return:
         """
         with self.ix.searcher() as searcher:
-            parser = QueryParser("content", self.ix.schema)
+            parser = QueryParser("content", self.ix.schema, group=syntax.OrGroup)
             query = parser.parse(query)
             print(query)
-            results = searcher.search(query)
+            similarityScorer = CosineSim(searcher, query)
+            results = searcher.search(query, limit=None, scored=False, sortedby=False, terms=True)
             print(len(results))
+            scoredResults ={}
             if len(results) > 0:
                 for r in results:
-                    print(r)
+                    print(r.docnum)
+                    scoredResults[r.docnum] = similarityScorer.similarity(r.docnum+1)
