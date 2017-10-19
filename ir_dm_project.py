@@ -4,7 +4,7 @@ from Indexer import Indexer
 
 def main():
     index = Indexer()
-    index.search("the")
+    index.search("microelectronic implementations")
     #LDA()
 
 
