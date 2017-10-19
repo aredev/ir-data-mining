@@ -18,12 +18,11 @@ class LDA(object):
     # print(model.show_topics())
 
     def __init__(self) -> None:
-        self.corpus = gensim.corpora.MalletCorpus('nips.corpus')
+        self.corpus = gensim.corpora.MalletCorpus('nips4topic.corpus')
         self.lda_model = gensim.models.LdaModel.load('nips.lda')
 
     def get_topics_for_document(self, docId):
-        doc_as_bow = self.corpus[int(docId)]
-        document_topics = self.lda_model.get_document_topics(doc_as_bow)
+        document_topics = self.lda_model.get_document_topics(self.corpus[int(docId)])
         topics_by_id = sorted(document_topics, key=lambda tup: tup[1], reverse=True)
 
         topic_results = []
