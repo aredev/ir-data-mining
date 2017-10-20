@@ -19,7 +19,8 @@ class AuthorClustering:
             self.labels = self.load_label_cache()
             self.path_dict = self.load_obj("path_dict")
 
-        if not cache_enabled or not len(self.labels) == len(self.nodes):
+        if not cache_enabled or not len(self.labels) == len(self.nodes) or self.path_dict is None:
+            print("Cache was not enabled or failed. Creating clusters ... This might take a while...")
             graph_cluster = gc.GraphCluster(self.author_graph)
             self.labels = graph_cluster.cluster_dbscan()
             self.path_dict = graph_cluster.shortest_path_dict()
@@ -168,9 +169,16 @@ class AuthorClustering:
         return dummy_graph
 
     def save_obj(self, obj, name):
-        with open('data/'+ name + '.pkl', 'wb') as f:
-            pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+        try:
+            with open('data/'+ name + '.pkl', 'wb') as f:
+                pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+        except EnvironmentError:
+            print("ERROR: Pickle could not be saved.")
 
     def load_obj(self, name):
-        with open('data/' + name + '.pkl', 'rb') as f:
-            return pickle.load(f)
+        try:
+            with open('data/' + name + '.pkl', 'rb') as f:
+                return pickle.load(f)
+        except EnvironmentError:
+            print("ERROR: Pickle could not be opened.")
+        return  None
