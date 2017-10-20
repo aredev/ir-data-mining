@@ -17,7 +17,7 @@ def index(request):
 
 
 def find_query_value(field, raw_title_query):
-    return raw_title_query.split(field)
+    return raw_title_query.split(field)[0]
 
 
 def search(request):
@@ -25,7 +25,7 @@ def search(request):
     m = IRModel.get_instance()
 
     query = request.POST.get('q')
-    pattern = re.compile("[a,y,t]:\"\w+\"")
+    pattern = re.compile("[y,t]:\"[a-zA-Z0-9 \.]+\"")
     params = pattern.findall(query)
     partial_results = []
     title_results = []  #list
@@ -33,20 +33,40 @@ def search(request):
     author_results = [] #nested list
     body_results = []
     for p in params:
+
         if p[0] == 't':
-            title_query = find_query_value('t:', p[3:-1])
-            title_results.extend(m.indexer.search("Supervised", 'title'))#title_query
+            title_query = "\'" + find_query_value('t:', p[3:-1]) + "\'"
+            title_results.extend(m.indexer.search(title_query, 'title'))
         elif p[0] == 'y':
             year_query = find_query_value('y:', p[3:-1])
             year_results.append(m.indexer.search(year_query, 'year'))
-        else:
-            author_query = find_query_value('a:', p[3:-1])
-            author_results.append(m.indexer.search(author_query, 'author'))
+
+    # intersect results from author and year
+    print(title_results)
+    print(year_results)
 
     body_query = pattern.sub('', query).strip()
     body_results = m.indexer.search(body_query)
 
     results = combine_title_body_results(title_results, body_results)
+    intersect = None
+    """"# Check if both tags are used.
+    if len(year_results) > 0 and len(author_results) > 0:
+        intersect = set(flatten(year_results)).intersection(flatten(author_results))
+    elif len(year_results) > 0:
+        intersect = set(flatten(year_results))
+    elif len(author_results) > 0:
+        intersect = set(flatten(author_results))
+    """
+    print("Before: " + str([body['score'] for body in body_results]))
+    results = combine_title_body_results(body_results, body_results)
+    print("Combined: " + str([body['score'] for body in results]))
+    #results = set(partial_results[0])
+
+    """if len(partial_results) > 0:
+        results = set(partial_results[0])
+    for param_result in partial_results[1:]:
+        results = results.intersection(param_result)"""
 
     results = sorted(results, key=(lambda k: k['score']), reverse=True)
 
@@ -55,7 +75,7 @@ def search(request):
         authors, suggested_authors = m.authors.find_authors_by_paper(result['docId'])
         result['suggested_authors'] = suggested_authors
         result['authors'] = authors
-        result['topics'] = m.lda.get_topics_for_document(result['docId'])
+        # result['topics'] = m.lda.get_topics_for_document(result['docId'])
 
     end_time = datetime.datetime.now()
     computation_time = (end_time-start_time).microseconds

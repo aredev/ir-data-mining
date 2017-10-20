@@ -26,8 +26,9 @@
     </div>
     <div class="row justify-content-center">
 
-        {% block stats %} {% endblock %}
-
+        <div class="row">
+            {% block stats %} {% endblock %}
+        </div>
 
         <div class="col-12 col-lg-4">
             <form id="search-form" method="post" action="/papers/search">

@@ -110,8 +110,9 @@ class Indexer(object):
         :return:
         """
         with self.ix.searcher() as searcher:
-            parser = QueryParser(field, self.ix.schema, group=syntax.OrGroup)
+            parser = QueryParser(field, self.ix.schema)
             query = parser.parse(query)
+            print("Query: " + str(query))
             # self.cosine.set_query_and_searcher(searcher, query)
             # results = searcher.search(query, limit=None, scored=False, sortedby=False, terms=True)
             results = searcher.search(query)
