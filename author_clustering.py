@@ -20,7 +20,7 @@ class AuthorClustering:
             self.path_dict = self.load_obj("path_dict")
 
         if not cache_enabled or not len(self.labels) == len(self.nodes) or self.path_dict is None:
-            print("Cache was not enabled or failed. Creating clusters ... This might take a while...")
+            print("Cache was not enabled or failed. Creating clusters ... This might take a while... (guessing 6min)")
             graph_cluster = gc.GraphCluster(self.author_graph)
             self.labels = graph_cluster.cluster_dbscan()
             self.path_dict = graph_cluster.shortest_path_dict()
@@ -181,4 +181,5 @@ class AuthorClustering:
                 return pickle.load(f)
         except EnvironmentError:
             print("ERROR: Pickle could not be opened.")
-        return  None
+        return None
+    
