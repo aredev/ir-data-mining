@@ -10,12 +10,12 @@ def main():
 
     m = IRModel.get_instance()
     results = m.indexer.search("neural")
-    print(m.authors.find_authors_by_paper(results[1]['docId']))
+    #print(m.authors.find_authors_by_paper(results[1]['docId']))
 
     topics = m.lda.get_topics_for_document(results[0]['docId'])
     #print("doc_id: " + results[1]['docId'])
     for result in results:
-        print("Score: " + str(result['score']))
+        print("Doc: " +str(result['docId'])+"Score: "+ str(result['score']))
 
 
 if __name__ == "__main__":

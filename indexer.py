@@ -95,7 +95,6 @@ class Indexer(object):
             rmtree(self.index_path, ignore_errors=True)
 
     def from_hit_to_dict(self, hit, score):
-        print(hit)
         return {
             'docId': hit['docId'],
             'title': hit['title'],
