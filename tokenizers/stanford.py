@@ -1,10 +1,12 @@
+import ctypes
 import time
 import os
-from nltk.tokenize import StanfordTokenizer, sent_tokenize
-from nltk.tag import StanfordPOSTagger
 from whoosh.analysis import Composable, Token
 from whoosh.compat import text_type
 from nltk.corpus import wordnet as wn
+from nltk.parse.corenlp import CoreNLPServer
+from nltk.tag.stanford import CoreNLPPOSTagger
+from nltk.tokenize.stanford import CoreNLPTokenizer
 from nltk import internals
 import regex
 
@@ -14,9 +16,35 @@ class StanTokenizer(Composable):
         self.lib_dir = "libs/"
         self.stanford_path = os.path.abspath(self.lib_dir + "stanford-postagger.jar")
         self.model_path = os.path.abspath(self.lib_dir + "models")
-        self.stanford_tokenizer = StanfordTokenizer(path_to_jar=self.stanford_path)
-        self.stanford_tagger = StanfordPOSTagger(self.model_path + '/english-bidirectional-distsim.tagger',
-                                                 path_to_jar=self.stanford_path, java_options="-mx4500m")
+        self.tagger_path = os.path.abspath(self.lib_dir + "taggers")
+        self.models_jar = self.model_path + "/" + "stanford-corenlp-3.8.0-models.jar"
+        self.tagger = "english-bidirectional-distsim.tagger"
+        self.server_url = "http://localhost:9000"
+
+        """
+        Parser models can be found here:
+        https://nlp.stanford.edu/software/lex-parser.shtml
+        https://github.com/nltk/nltk/issues/731
+        (tab "english models")
+        """
+        """
+        We need to start the CoreNLP server.
+        See this:
+        https://stanfordnlp.github.io/CoreNLP/corenlp-server.html
+        And this:
+        https://github.com/smilli/py-corenlp/issues/11
+        """
+        print(ctypes.windll.shell32.IsUserAnAdmin())
+        # self.server = CoreNLPServer(
+        #     path_to_jar=self.stanford_path,
+        #     java_options="-xmx4G",
+        #     port=6767,
+        #     path_to_models_jar=self.models_jar
+        # )
+        # print(self.server.url)
+        # self.server.start()
+        self.stanford_tokenizer = CoreNLPTokenizer(self.server_url)
+        self.stanford_tagger = CoreNLPPOSTagger(self.server_url)
         # Taken from https://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
         self.remove = regex.compile(r'[\p{C}|\p{M}|\p{P}|\p{S}|\p{Z}]+', regex.UNICODE)
 
@@ -58,7 +86,7 @@ class StanTokenizer(Composable):
             To prevent out of memory errors, we first tokenize the text into sentences.
             We then tokenize each of the sentences and then apply postagging.
             """
-            sentences = sent_tokenize(value)
+            tokens = self.stanford_tokenizer.tokenize(value)
             """
             Tagging and tokenization is very slow.
             We can start the pos-tagger as a server, which makes it faster.
@@ -67,46 +95,40 @@ class StanTokenizer(Composable):
             and
             https://stackoverflow.com/questions/23322674/how-to-improve-speed-with-stanford-nlp-tagger-and-nltk
             """
-            print(len(sentences))
-            tokenized_sentences = self.stanford_tokenizer.tokenize_sents(sentences)
-            tagged_tokenized_sentences = self.stanford_tagger.tag_sents(tokenized_sentences)
+            tagged_tokens = self.stanford_tagger.tag(tokens)
+            tagged_tokens = self._remove_punctuation(tagged_tokens)
+            tagged_tokens = self._remove_empty_tokens(tagged_tokens)
             elapsed_time = time.time() - start_time
             print("Elapsed time: {}s".format(elapsed_time))
-            """
-            For each sentence, we loop through the words in this sentence.
-            For each word, we apply the regex to remove punctuation.
-            This leads to the empty string if the word only consisted of punctuation.
-            """
-            tagged_tokenized_sentences = map(
-                lambda sent: map(lambda word: (self.remove.sub(u" ", word[0]).strip(), word[1]), sent),
-                tagged_tokenized_sentences)
-
             lenght = 0
-            for sentence in tagged_tokenized_sentences:
-                # We only consider words that have all values in the tuple set
-                for (word, pos_tag) in filter(lambda x: all(x), sentence):
-                    lenght += 1
-                    # print("word:{}, pos-tag:{}".format(word, pos_tag))
-                    start = prevend
-                    end = start + len(word)
-                    if word:
-                        t.text = word
-                        # Transform the postags.
-                        t.pos_tag = self._penn2morphy(pos_tag)
-                        t.boost = 1.0
-                        if keeporiginal:
-                            t.original = t.text
-                        t.stopped = False
-                        if positions:
-                            t.pos = pos
-                            pos += 1
-                        if chars:
-                            t.startchar = start_char + start
-                            t.endchar = start_char + end
-                        prevend = start + len(word)
-                        yield t
+            for (token, pos_tag) in tagged_tokens:
+                lenght += 1
+                # print("word:{}, pos-tag:{}".format(word, pos_tag))
+                start = prevend
+                end = start + len(token)
+                if token:
+                    t.text = token
+                    # Transform the postags.
+                    t.pos_tag = self._penn2morphy(pos_tag)
+                    t.boost = 1.0
+                    if keeporiginal:
+                        t.original = t.text
+                    t.stopped = False
+                    if positions:
+                        t.pos = pos
+                        pos += 1
+                    if chars:
+                        t.startchar = start_char + start
+                        t.endchar = start_char + end
+                    prevend = start + len(token)
+                    yield t
             print("Number of tokens in doc: {}".format(lenght))
 
+    def _remove_punctuation(self, tagged_tokens):
+        return [(self.remove.sub(u" ", t[0]).strip(), t[1]) for t in tagged_tokens]
+
+    def _remove_empty_tokens(self, tagged_tokens):
+        return [t for t in tagged_tokens if all(t)]
 
     def _penn2morphy(self, penntag, return_none=False):
         """

@@ -1,3 +1,4 @@
+import ctypes
 import os
 import os.path
 import sys
@@ -95,7 +96,7 @@ class Indexer(object):
         # Add documents to the index
         row_count, corpus = self.db_handler.get_table_rows_and_count("papers")
         try:
-            for document in corpus[0:5]:
+            for document in corpus[:500]:
                 docId, year, title, _, pdf_name, abstract, paper_text = document
                 print(docId, year, title, pdf_name, abstract)
                 author_ids = db.DbHandler().get_authors_by_paper_id(docId)

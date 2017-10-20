@@ -1,4 +1,27 @@
+For testing tokenization on a sample document:
+
 java -mx300m -cp stanford-postagger-withModel.jar edu.stanford.nlp.tagger.maxent.MaxentTagger -model edu\stanford\nlp\models\pos-tagger\english-bidirectional\english-bidirectional-distsim.tagger -textFile sample-input.txt
+
+
+For launching the server:
+
+java -mx300m -cp stanford-postagger-withModel.jar edu.stanford.nlp.tagger.maxent.MaxentTaggerServer -model edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger -port 2020 &
+
+
 
 CoreNLPTagger voor het taggen van getokenize text.
 CoreNLPTokenizer voor het tokenizen van text.
+
+
+https://nlp.stanford.edu/software/stanford-english-corenlp-2017-06-09-models.jar
+
+#UPDATE
+
+Make sure to run the commands for launching the server, which can be found here:
+https://stanfordnlp.github.io/CoreNLP/corenlp-server.html
+in the directory of stanford-corenlp-full.
+This package can be downloaded here: 
+https://stanfordnlp.github.io/CoreNLP/download.html
+
+It is also possible to launch the server from within NLTK,
+however this is so fraqile that is is recommended to launch it yourself using the command line. 
