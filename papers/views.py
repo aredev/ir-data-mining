@@ -39,7 +39,7 @@ def search(request):
             title_results.extend(m.indexer.search(title_query, 'title'))
         elif p[0] == 'y':
             year_query = find_query_value('y:', p[3:-1])
-            year_results.append(m.indexer.search(year_query, 'year'))
+            year_results = m.indexer.search(year_query, 'year')
 
     # intersect results from author and year
     print(title_results)
@@ -49,19 +49,11 @@ def search(request):
     body_results = m.indexer.search(body_query)
 
     results = combine_title_body_results(title_results, body_results)
-    intersect = None
-    """"# Check if both tags are used.
-    if len(year_results) > 0 and len(author_results) > 0:
-        intersect = set(flatten(year_results)).intersection(flatten(author_results))
-    elif len(year_results) > 0:
-        intersect = set(flatten(year_results))
-    elif len(author_results) > 0:
-        intersect = set(flatten(author_results))
-    """
-    print("Before: " + str([body['score'] for body in body_results]))
-    results = combine_title_body_results(body_results, body_results)
-    print("Combined: " + str([body['score'] for body in results]))
-    #results = set(partial_results[0])
+
+    #intersect with year results if it contains hits
+
+    if len(year_results) > 0:
+        results = combine_with_year_results(results, year_results)
 
     """if len(partial_results) > 0:
         results = set(partial_results[0])
@@ -85,6 +77,16 @@ def search(request):
 # This help function performs a flatten operation on a double nested list.
 def flatten(nestedlist):
     return [element for sublist in nestedlist for element in sublist]
+
+
+def combine_with_year_results(combined_title_body_results, year_results):
+    combined_list = []
+    for yr in year_results:
+        match = find_result_match(yr['docId'], combined_title_body_results)
+        if match is not None:
+            combined_list.append(yr)
+
+    return combined_list
 
 
 # Might be faster if you keep a list of the matches and remove them from the second search.
