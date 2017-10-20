@@ -35,4 +35,4 @@ class DbHandler(object):
 
     def get_author_by_id(self, author_id):
         query = "SELECT name FROM authors WHERE id == " + str(author_id)
-        return self.conn.execute(query).fetchone()
+        return self.conn.execute(query).fetchone()[0]

@@ -45,7 +45,6 @@ def search(request):
         results = results.intersection(param_result)
 
     body_query = pattern.sub('', query).strip()
-    print(m.dummy.get_random())
 
     results = m.indexer.search(body_query)
 

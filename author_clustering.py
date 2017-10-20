@@ -8,7 +8,7 @@ import datetime
 
 class AuthorClustering:
 
-    def __init__(self, cache_enabled=False, label_cache_filename="data\label_cache.csv"):
+    def __init__(self, cache_enabled=True, label_cache_filename="data\label_cache.csv"):
         self.LABEL_CACHE = label_cache_filename
         # TESTING ENABLED
         self.author_dict, self.author_graph = self.load_csv()
@@ -128,10 +128,11 @@ class AuthorClustering:
         paper_authors = db.DbHandler().get_authors_by_paper_id(paper_id)
         result_authors = []
         for author in paper_authors:
+            print(result_authors+paper_authors)
             closest = self.find_nearest_neighbour(author, result_authors+paper_authors)
             if not closest == author:
-                result_authors.append((closest, db.DbHandler().get_author_by_id(closest)))
-        return [db.DbHandler().get_author_by_id(pa) for pa in paper_authors], result_authors
+                result_authors.append(closest)
+        return [db.DbHandler().get_author_by_id(pa) for pa in paper_authors], [db.DbHandler().get_author_by_id(ra) for ra in result_authors]
 
     # This function is for quick testing. It can be removed in the final version.
     def make_fake_graph(self):
@@ -182,4 +183,3 @@ class AuthorClustering:
         except EnvironmentError:
             print("ERROR: Pickle could not be opened.")
         return None
-    

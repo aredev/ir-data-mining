@@ -94,12 +94,13 @@ class Indexer(object):
             # Remove the index
             rmtree(self.index_path, ignore_errors=True)
 
-    def from_hit_to_dict(self, hit, index):
+    def from_hit_to_dict(self, hit, score):
+        print(hit)
         return {
             'docId': hit['docId'],
             'title': hit['title'],
             'year': hit['year'],
-            'order': index
+            'score': score
         }
 
     def search(self, query, field="content"):
@@ -120,9 +121,10 @@ class Indexer(object):
 
             results_in_dict = []
             if len(results) > 0:
+
                 for idx, r in enumerate(results):
                     print(r.docnum)
-                    results_in_dict.append(self.from_hit_to_dict(r, idx))
+                    results_in_dict.append(self.from_hit_to_dict(r, results.score(idx)))
                     #fixme:
                     # scored_results[r.docnum] = self.cosine.similarity(r.docnum+1)
 
