@@ -27,11 +27,8 @@ def search(request):
     query = request.POST.get('q')
     pattern = re.compile("[y,t]:\"[a-zA-Z0-9 \.]+\"")
     params = pattern.findall(query)
-    partial_results = []
     title_results = []  #list
     year_results = []   #nested list
-    author_results = [] #nested list
-    body_results = []
     for p in params:
 
         if p[0] == 't':
@@ -51,14 +48,10 @@ def search(request):
     results = combine_title_body_results(title_results, body_results)
 
     #intersect with year results if it contains hits
-
     if len(year_results) > 0:
         results = combine_with_year_results(results, year_results)
 
-    """if len(partial_results) > 0:
-        results = set(partial_results[0])
-    for param_result in partial_results[1:]:
-        results = results.intersection(param_result)"""
+    results = assign_pagerank(results, m)
 
     results = sorted(results, key=(lambda k: k['score']), reverse=True)
 
@@ -74,9 +67,12 @@ def search(request):
 
     return render(request, 'results.html', {'results': results, 'nr_of_results': len(results), 'time': computation_time})
 
-# This help function performs a flatten operation on a double nested list.
-def flatten(nestedlist):
-    return [element for sublist in nestedlist for element in sublist]
+
+# This function assigns the pagerank of a paper.
+def assign_pagerank(result_list, irm_model, y=1.0):
+    for i, result in enumerate(result_list):
+        result_list[i]['score'] = result['score'] + y * irm_model.reputation_scores.get_reputation_score_by_paper(result['docId'])
+    return result_list
 
 
 def combine_with_year_results(combined_title_body_results, year_results):
@@ -90,20 +86,24 @@ def combine_with_year_results(combined_title_body_results, year_results):
 
 
 # Might be faster if you keep a list of the matches and remove them from the second search.
-def combine_title_body_results(title_results, body_results):
+def combine_title_body_results(title_results, body_results, t=1.0, b=1.0):
     combined_list = []
     for br in body_results:
         match = find_result_match(br['docId'], title_results)
         if match is not None:
             print("MATCH")
-            br['score'] = float(br['score']) + float(match['score'])
+            br['score'] = b * float(br['score']) + t * float(match['score'])
+        else:
+            br['score'] = b * float(br['score'])
         combined_list.append(br)
 
     for tr in title_results:
         match = find_result_match(tr['docId'], body_results)
         if match is None:
+            tr['score'] = t * float(tr['score'])
             combined_list.append(tr)
     return combined_list
+
 
 # This function returns the result if it matches the paper_id, otherwise it returns None
 def find_result_match(paper_id, result_list):
