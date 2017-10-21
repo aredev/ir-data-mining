@@ -13,6 +13,8 @@ from db_handler import DbHandler
 from filters.wordnet_lemmatizer import WordnetLemmatizerFilter
 from tokenizers.stanford import StanTokenizer
 from cosine import CosineSim
+import db_handler as db
+
 
 
 class Indexer(object):
@@ -39,6 +41,7 @@ class Indexer(object):
         """
         self.schema = Schema(
             docId=ID(stored=True),
+            authors=TEXT(stored=True),
             content=TEXT(analyzer=self.analyzer),
             year=TEXT(stored=True),
             title=TEXT(stored=True),
@@ -80,8 +83,14 @@ class Indexer(object):
             for document in corpus[0:5]:
                 docId, year, title, _, pdf_name, abstract, paper_text = document
                 print(docId, year, title, pdf_name, abstract)
+                author_ids = db.DbHandler().get_authors_by_paper_id(docId)
+                author_names = ""
+                for author_id in author_ids:
+                    author_names += db.DbHandler().get_author_by_id(author_id) + " "
+                print(author_names)
+
                 self.writer.add_document(docId=str(docId), year=str(year), title=title, pdf_name=pdf_name,
-                                         content=paper_text)
+                                         content=paper_text, authors=author_names)
             # Commit changes
             self.writer.commit()
         except Exception as e:

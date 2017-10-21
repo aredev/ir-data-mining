@@ -10,13 +10,13 @@ def main():
     #a = AuthorClustering(cache_enabled=True)
     #print(a.find_authors_by_paper("3"))
 
-    query = "a:\"John de Beer\""
-    pattern = re.compile("[a,y,t]:\"[a-zA-Z ]+\"")
-    params = pattern.findall(query)
-    print(params)
+    # query = "a:\"John de Beer\""
+    # pattern = re.compile("[a,y,t]:\"[a-zA-Z ]+\"")
+    # params = pattern.findall(query)
+    # print(params)
 
 
-    # m = IRModel.get_instance()
+    m = IRModel.get_instance()
     # body_results = m.indexer.search("neural")
     # title_results = m.indexer.search("Constrained Differential Optimization", 'title')
 
