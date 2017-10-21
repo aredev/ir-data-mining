@@ -1,4 +1,3 @@
-import ctypes
 import os
 import os.path
 import sys
@@ -12,6 +11,8 @@ from whoosh.qparser import QueryParser
 from db_handler import DbHandler
 from filters.wordnet_lemmatizer import WordnetLemmatizerFilter
 from tokenizers.stanford import StanTokenizer
+
+from util.utils import print_progress
 
 import psutil
 
@@ -75,7 +76,7 @@ class Indexer(object):
         values = psutil.virtual_memory()
         # to display in MB format, bitshift right with 20. For GB format, shift with 30.
         available_free_ram = values.available >> 20
-        # use 80 percent of the available ram
+        # use 40 percent of the available ram
         available_free_ram *= 0.4
         self.writer = self.ix.writer(procs=psutil.cpu_count(), limitmb=available_free_ram, multisegment=True)
         # self.writer = self.ix.writer()
@@ -84,13 +85,15 @@ class Indexer(object):
         # Read this: https://www.ocf.berkeley.edu/~tzhu/senate/Whoosh-2.4.1/docs/build/html/_sources/indexing.txt
         # Add documents to the index
         row_count, corpus = self.db_handler.get_table_rows_and_count("papers")
+        # print_progress(0, row_count, prefix="Indexing progress:", suffix=" Complete")
         try:
-            for document in corpus[:500]:
+            for document in corpus[3000:4000]:
                 docId, year, title, _, pdf_name, abstract, paper_text = document
-                print(docId, year, title, pdf_name, abstract)
+                # print(docId, year, title, pdf_name, abstract)
+                # TODO content also contains docID for testing, this should be removed!
                 self.writer.add_document(docId=str(docId), year=str(year), title=title, pdf_name=pdf_name,
-                                         content=paper_text)
-            # Commit changes. NOTE this is a very slow operation, not sure how this can be fixed
+                                         content=str(docId) + "     " + paper_text)
+                print_progress(docId, row_count, prefix="Indexing progress:", suffix=" Complete")
             self.writer.commit()
         except Exception as e:
             # Formatted printing exception
