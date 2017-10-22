@@ -1,9 +1,10 @@
 import os
 import os.path
-import sys
+import time
 from shutil import rmtree
 
-from whoosh.analysis import LowercaseFilter, StopFilter
+import psutil
+from whoosh.analysis import LowercaseFilter
 from whoosh.fields import Schema, TEXT, ID, STORED
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
@@ -11,10 +12,7 @@ from whoosh.qparser import QueryParser
 from db_handler import DbHandler
 from filters.wordnet_lemmatizer import WordnetLemmatizerFilter
 from tokenizers.stanford import StanTokenizer
-
 from util.utils import print_progress
-
-import psutil
 
 
 class Indexer(object):
@@ -24,10 +22,11 @@ class Indexer(object):
         self.ix = None
         self.writer = None
         """
-        By default, the StandardAnalyzer() is used. This analzer is composed of a RegexTokenizer with a LowercaseFilter
+        By default, the StandardAnalyzer() is used. This analyzer is composed of a RegexTokenizer with a LowercaseFilter
         and an optional StopFilter (for removing stopwords)
         """
-        self.analyzer = StanTokenizer() | LowercaseFilter() | WordnetLemmatizerFilter() | StopFilter()
+        self.analyzer = StanTokenizer() | LowercaseFilter() | WordnetLemmatizerFilter()  # | StopFilter()
+
         """
         The whoosh.fields.TEXT indexes the text and stores the term positions to allow phrase searching
         TEXT fields use StandardAnalyzer by default. 
@@ -64,7 +63,7 @@ class Indexer(object):
 
     def __create_index(self):
         """
-        Create a new index
+        Create a new index. This takes about 15 minutes on an average machine assuming a low workload
         :return:
         """
         os.mkdir(self.index_path)
@@ -85,25 +84,30 @@ class Indexer(object):
         # Read this: https://www.ocf.berkeley.edu/~tzhu/senate/Whoosh-2.4.1/docs/build/html/_sources/indexing.txt
         # Add documents to the index
         row_count, corpus = self.db_handler.get_table_rows_and_count("papers")
-        # print_progress(0, row_count, prefix="Indexing progress:", suffix=" Complete")
+        start_time = time.time()
+        print_progress(0, row_count, prefix="Docs being indexed:", suffix=" Complete")
         try:
-            for document in corpus[3000:4000]:
+            docs_indexed = 0
+            for document in corpus:
+                """
+                A doc id is not the previous doc id incremented by one: for example, doc ID 57 is not being used,
+                although doc ID 56 and 58 are.
+                Therefore, we maintain our own counter to track the indexing progress
+                """
                 docId, year, title, _, pdf_name, abstract, paper_text = document
                 # print(docId, year, title, pdf_name, abstract)
-                # TODO content also contains docID for testing, this should be removed!
                 self.writer.add_document(docId=str(docId), year=str(year), title=title, pdf_name=pdf_name,
-                                         content=str(docId) + "     " + paper_text)
-                print_progress(docId, row_count, prefix="Indexing progress:", suffix=" Complete")
+                                         content=paper_text)
+                print_progress(docs_indexed, row_count, prefix="Docs being indexed:", suffix=" Complete")
+                docs_indexed += 1
             self.writer.commit()
+            elapsed_time = time.time() - start_time
+            print("\nIndexing took {} seconds".format(elapsed_time))
+            all_terms = list(self.ix.reader().all_terms())
+            print("Number of terms in the vocabulary: {}".format(len(all_terms)))
         except Exception as e:
-            # Formatted printing exception
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
-            # In addition, we also print the normal exception
-            print(e)
+            # Stop the writer and remove the index
             self.writer.cancel()
-            # Remove the index
             rmtree(self.index_path, ignore_errors=True)
 
         """
