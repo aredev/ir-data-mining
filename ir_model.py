@@ -25,13 +25,9 @@ class IRModel:
             print("Starting initialization of IR Model! at " + str(start_time))
             self.indexer = Indexer()
             self.dummy = Dummy()
-            self.reputation_scores = ReputationScores()
-            self.authors = AuthorClustering(cache_enabled=True)
+            # self.reputation_scores = ReputationScores()
+            # self.authors = AuthorClustering(cache_enabled=True)
             # self.lda = LDA()
             IRModel.__instance = self
             end_time = datetime.datetime.now()
             print("Finished initialization of IR Model! at " + str(end_time) + "\nIt took: " + str(end_time - start_time))
-
-
-
-

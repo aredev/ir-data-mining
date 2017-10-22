@@ -8,6 +8,7 @@ from ir_model import IRModel
 import nltk
 import re
 
+
 def main():
 
     a = AuthorClustering(cache_enabled=True)
@@ -34,7 +35,8 @@ def main():
     #print(params)
 
 
-    # m = IRModel.get_instance()
+
+    m = IRModel.get_instance()
     # body_results = m.indexer.search("neural")
     # title_results = m.indexer.search("Constrained Differential Optimization", 'title')
 
