@@ -22,11 +22,44 @@ class AuthorClustering:
         if not cache_enabled or not len(self.labels) == len(self.nodes) or self.path_dict is None:
             print("Cache was not enabled or failed. Creating clusters ... This might take a while... (guessing 6min)")
             graph_cluster = gc.GraphCluster(self.author_graph)
-            self.labels = graph_cluster.cluster_dbscan()
+            self.labels = graph_cluster.cluster_dbscan(epsilon=2, sample_min=20)
+            self.save_labels_csv()
             self.path_dict = graph_cluster.shortest_path_dict()
             self.save_obj(self.path_dict, "path_dict")
-            self.save_labels_csv()
+        self.cluster_stats()
 
+    def cluster_stats(self):
+        unique_clusters = gc.remove_all_from_list(set(self.labels), -1)
+        number_of_clusters = len(unique_clusters)
+        print("Number of clusters: " + str(number_of_clusters))
+        print("Number of outliers: " + str(len(self.find_cluster_by_label(-1))))
+        cluster_sizes = sorted([self.labels.count(cs) for cs in unique_clusters], reverse=True)
+        if len(cluster_sizes) > 20:
+            print("Average cluster size " + str(len(self.labels)/number_of_clusters) + " all sizes: " + str(cluster_sizes[0:20]))
+        else:
+            print("Average cluster size " + str(len(self.labels) / number_of_clusters) + " all sizes: " + str(
+                cluster_sizes))
+        dist_averages = []
+        for label in unique_clusters:
+            dist_averages.append(self.average_distance(self.find_cluster_by_label(label)))
+
+
+        print("Average distances: " + str(dist_averages))
+
+    def average_distance(self, nodes):
+        size = len(nodes)
+        if size > 1:
+            i = 1
+            total_dist = 0
+            for node1 in nodes[:-1]:
+                j = 0
+                for node2 in nodes[i:]:
+                    total_dist += 2 * float(self.path_dict[node1][node2])
+                    j += 1
+                i += 1
+            return total_dist/(size*size)
+        else:
+            return 0
 
     # This function loads labels as list of integers form the cache
     def load_label_cache(self):
@@ -44,6 +77,9 @@ class AuthorClustering:
         node_index = self.nodes.index(search_node)
         match_label = self.labels[node_index]
         return [node for node, label in zip(self.nodes, self.labels) if label == match_label and not node == search_node]
+
+    def find_cluster_by_label(self, match_label):
+        return [node for node, label in zip(self.nodes, self.labels) if label == match_label]
 
     # This function writes a list of labels to file.
     def save_labels_csv(self):
