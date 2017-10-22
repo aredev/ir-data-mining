@@ -1,6 +1,3 @@
-import time
-from urllib.error import HTTPError
-
 import regex
 from nltk import internals
 from nltk.corpus import wordnet as wn
@@ -13,17 +10,10 @@ from whoosh.compat import text_type
 class StanTokenizer(Composable):
     def __init__(self):
         self.server_url = "http://localhost:9000"
-        self.tokenize_properties = {
-            'untokenizable': 'noneDelete',
-        }
         self.stanford_tokenizer = CoreNLPTokenizer(self.server_url)
         self.stanford_tagger = CoreNLPPOSTagger(self.server_url)
-
         # Taken from https://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
         self.remove = regex.compile(r'[\p{C}|\p{M}|\p{P}|\p{S}|\p{Z}]+', regex.UNICODE)
-        # self.all_chars = (chr(i) for i in range(0x110000))
-        # self.control_chars = ''.join(map(chr, (list(range(0,32)) + list(range(127,160)))))
-        # self.control_char_re = re.compile('[%s]' % re.escape(self.control_chars))
         """
         See https://stackoverflow.com/questions/27116495/java-command-fails-in-nltk-stanford-pos-tagger
         This will increase the maximum RAM size that java allows Stanford POS Tagger to use. 
@@ -57,15 +47,13 @@ class StanTokenizer(Composable):
         else:
             prevend = 0
             pos = start_pos
-            # TODO remove this, debug statement
-            docId = value[0:4]
             try:
                 # Tokenize
-                tokens = self.stanford_tokenizer.tokenize(value, properties=self.tokenize_properties)
+                tokens = self.stanford_tokenizer.tokenize(value)
                 # Tag the tokens
                 tagged_tokens = self.stanford_tagger.tag(tokens)
                 # Remove punctuation and finally remove empty tokens
-                tagged_tokens = self._remove_punctuation(tagged_tokens)
+                tagged_tokens = self._remove_punctuation_using_tags(tagged_tokens)
                 tagged_tokens = self._remove_empty_tokens(tagged_tokens)
                 # print("Tagged and tokenized doc {} in: {}s".format(value[0:4], elapsed_time))
                 for (token, pos_tag) in tagged_tokens:
@@ -87,12 +75,11 @@ class StanTokenizer(Composable):
                             t.endchar = start_char + end
                         prevend = start + len(token)
                         yield t
-            except (ValueError, HTTPError) as e:
+            except Exception as e:
                 """
-                This seems to be an issue that only recently has been discovered:
-                https://github.com/stanfordnlp/CoreNLP/issues/522
+                Documents with doc id "6398" and "6421" (having index 6355 and 6378 receptively)
+                throw an exception when being tokenized. 
                 """
-                print("Doc ID {} caused an error of type {}".format(docId, type(e)))
                 pass
 
     def _remove_punctuation(self, tagged_tokens):
@@ -102,6 +89,21 @@ class StanTokenizer(Composable):
         :return: A list of (token, tag) tuples, where any punctuation in the tokens has been removed.
         """
         return [(self.remove.sub(u" ", t[0]).strip(), t[1]) for t in tagged_tokens]
+
+    def _remove_punctuation_using_tags(self, tagged_tokens):
+        """
+        The Stanford POS Tagger uses tags based on the Penn Treebank Project:
+        https://stackoverflow.com/questions/1833252/java-stanford-nlp-part-of-speech-labels
+        In addition to these tags, the Stanford POS Tagger has additional punctuation tags (9 in total):
+        https://www.eecis.udel.edu/~vijay/cis889/ie/pos-set.pdf
+        This function removes the punctuation  based on these punctuation tags and other tags.
+        :param tagged_tokens: A list of (token, tag) tuples
+        :return: A list of (token, tag) tuples, where any token with a punctuation tag has been removed
+        """
+        return [(t[0].strip(), t[1]) for t in tagged_tokens if
+                t[1] not in ["#", "$", '"', ",", ".", ":", "``", "-LRB-", "-RRB-", "-RCB-", "-LCB-", "CD", "LS", "SYM"]
+                and all(t)
+                ]
 
     def _remove_empty_tokens(self, tagged_tokens):
         """
