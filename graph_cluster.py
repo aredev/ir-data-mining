@@ -20,7 +20,6 @@ class GraphCluster:
         pos = nx.spring_layout(self.graph)
         nx.draw_networkx_nodes(self.graph, pos, node_color=labels, node_size=2, alpha=1)
         nx.draw_networkx_edges(self.graph, pos, width=0.5, edge_color='r', alpha=1)
-
         plt.savefig(filename)
         plt.clf()
 

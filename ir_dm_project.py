@@ -34,8 +34,6 @@ def main():
     #params = pattern.findall(query)
     #print(params)
 
-
-
     # m = IRModel.get_instance()
     # body_results = m.indexer.search("neural")
     # title_results = m.indexer.search("Constrained Differential Optimization", 'title')
