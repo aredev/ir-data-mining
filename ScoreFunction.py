@@ -29,6 +29,19 @@ class ReputationScores:
 
         return score
 
+    def get_author_with_highest_reputation_score(self, authors):
+        score = (0, authors[0])
+        for author in authors:
+            try:
+                author = int(author)
+                rs = self.get_score_from_list(author)
+            except:
+                rs = 0
+
+            if rs > score[0]:
+                score = (rs, author)
+        return score[1]
+
     def get_score_from_list(self, author):
         index_number = self.author_list.index(author)
         score = self.score_list[index_number]

@@ -12,7 +12,7 @@ import re
 def main():
 
     a = AuthorClustering(cache_enabled=True)
-
+    print(len(a.nodes))
     #l1 = ["5", "1", "10", "2", "6"]
     #l2 = [1,2,3,4,5]
     #print(sorted(zip(l1,l2), key=lambda x: int(x[0])))
@@ -36,7 +36,7 @@ def main():
 
 
 
-    m = IRModel.get_instance()
+    # m = IRModel.get_instance()
     # body_results = m.indexer.search("neural")
     # title_results = m.indexer.search("Constrained Differential Optimization", 'title')
 

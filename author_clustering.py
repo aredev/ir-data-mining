@@ -3,16 +3,13 @@ import networkx as nx
 import pickle
 import db_handler as db
 import graph_cluster as gc
-import datetime
-
+#from ir_model import IRModel
 
 class AuthorClustering:
 
     def __init__(self, cache_enabled=True, label_cache_filename="data\label_cache.csv"):
         self.LABEL_CACHE = label_cache_filename
-        # TESTING ENABLED
         self.author_dict, self.author_graph = self.load_csv()
-        #self.author_graph = self.make_fake_graph()
         self.labels = []
         self.nodes = nx.nodes(self.author_graph)
         if cache_enabled:
@@ -22,7 +19,8 @@ class AuthorClustering:
         if not cache_enabled or not len(self.labels) == len(self.nodes) or self.path_dict is None:
             print("Cache was not enabled or failed. Creating clusters ... This might take a while... (guessing 6min)")
             graph_cluster = gc.GraphCluster(self.author_graph)
-            self.labels = graph_cluster.cluster_dbscan(epsilon=2, sample_min=20)
+            self.labels = graph_cluster.cluster_dbscan(epsilon=1.5, sample_min=10)
+            #self.labels = graph_cluster.cluster_agglomerative()
             self.save_labels_csv()
             self.path_dict = graph_cluster.shortest_path_dict()
             self.save_obj(self.path_dict, "path_dict")
@@ -146,17 +144,18 @@ class AuthorClustering:
         for neighbour in nodes:
             dist += self.path_dict[neighbour][node]
         return dist
-    """
-    # This function gives the n nodes with the least total distance from the query nodes.
-    def find_total_nearest_neighbour(self, nodes, n):
-        neighbour_dict = self.path_dict[node]
-        closest = []
-        neighbours = [n for n in neighbour_dict.keys() if n not in nodes]
-        for neighbour in neighbours:
-            closest.append((neighbour, ))
-        return closest
-        """
 
+    # This funtion returns a list with suggestions based on the labels (in order from low to high).
+    # WARNING: This function might return None if none of the authors in the cluster has a successful pagerank.
+    # TODO: Can't reach scoreFunction in model since author_clustering is in model. Make function static?
+    """def precompute_all_cluster_suggestions(self):
+    m = IRModel.get_instance() #Is this possible?
+    print("precomputing cluster suggestions...")
+    all_clusters = sorted(gc.remove_all_from_list(set(self.labels), -1))
+    suggestion_list = []
+    for cluster_label in all_clusters:
+        suggestion_list.append(m.reputation_scores.get_author_with_highest_reputation_score(self.find_cluster_by_label(cluster_label)))
+    print(suggestion_list)"""
 
     # This function finds the pairwise nearest neighbours for a group of authors (excluding already found authors in the
     # process. Pairwise nearest neighbour might return different results based on the order of the query authors.
