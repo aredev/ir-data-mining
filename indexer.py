@@ -3,30 +3,22 @@ import os.path
 import time
 from shutil import rmtree
 
-from whoosh.analysis import LowercaseFilter, StopFilter
-from whoosh.fields import Schema, TEXT, ID, STORED, DATETIME
+import psutil
+from whoosh.analysis import LowercaseFilter
+from whoosh.fields import Schema, TEXT, ID, STORED
 from whoosh.index import create_in, exists_in, open_dir
-from whoosh.qparser import QueryParser, syntax
-from nltk.tokenize import StanfordTokenizer
+from whoosh.qparser import QueryParser
 
+import db_handler as db
 from db_handler import DbHandler
 from filters.wordnet_lemmatizer import WordnetLemmatizerFilter
 from tokenizers.stanford import StanTokenizer
-
-from cosine import CosineSim
-import db_handler as db
-
 from util.utils import print_progress
 
 
 class Indexer(object):
     def __init__(self):
         self.db_handler = DbHandler()
-        #fixme:
-        # self.cosine = CosineSim()
-
-        self.stanford_path = os.path.abspath("libs/stanford-postagger.jar")
-        self.stanford_tokenizer = StanfordTokenizer
         self.index_path = "index"
         self.ix = None
         self.writer = None
@@ -34,8 +26,7 @@ class Indexer(object):
         By default, the StandardAnalyzer() is used. This analyzer is composed of a RegexTokenizer with a LowercaseFilter
         and an optional StopFilter (for removing stopwords)
         """
-
-        self.analyzer = StanTokenizer() | LowercaseFilter() | WordnetLemmatizerFilter()
+        self.analyzer = StanTokenizer() | LowercaseFilter() | WordnetLemmatizerFilter()  # | StopFilter()
         """
         The whoosh.fields.TEXT indexes the text and stores the term positions to allow phrase searching
         TEXT fields use StandardAnalyzer by default. 
@@ -106,13 +97,10 @@ class Indexer(object):
                 Therefore, we maintain our own counter to track the indexing progress
                 """
                 docId, year, title, _, pdf_name, abstract, paper_text = document
-                print(docId, year, title, pdf_name, abstract)
                 author_ids = db.DbHandler().get_authors_by_paper_id(docId)
                 author_names = ""
                 for author_id in author_ids:
                     author_names += db.DbHandler().get_author_by_id(author_id) + " "
-                print(author_names)
-
                 self.writer.add_document(docId=str(docId), year=str(year), title=title, pdf_name=pdf_name,
                                          content=paper_text, authors=author_names)
             self.writer.commit()
@@ -141,7 +129,6 @@ class Indexer(object):
             'score': score
         }
 
-
     def search(self, query, field="content"):
         """
         Search using a given query
@@ -153,19 +140,11 @@ class Indexer(object):
             parser = QueryParser(field, self.ix.schema)
             query = parser.parse(query)
             print("Query: " + str(query))
-            # self.cosine.set_query_and_searcher(searcher, query)
-            # results = searcher.search(query, limit=None, scored=False, sortedby=False, terms=True)
             results = searcher.search(query)
             print("Number of results: " + str(len(results)))
-            scored_results = {}
-
             results_in_dict = []
             if len(results) > 0:
-
                 for idx, r in enumerate(results):
                     print(r.docnum)
                     results_in_dict.append(self.from_hit_to_dict(r, results.score(idx)))
-                    #fixme:
-                    # scored_results[r.docnum] = self.cosine.similarity(r.docnum+1)
-
             return results_in_dict

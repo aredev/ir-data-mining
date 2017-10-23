@@ -1,7 +1,5 @@
 import warnings
 
-import datetime
-
 warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 
 import gensim

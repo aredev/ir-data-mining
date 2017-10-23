@@ -1,12 +1,10 @@
 import datetime
-from django.http import HttpResponse
-from django.shortcuts import render
 import re
 
+from django.shortcuts import render
+
 # Create your views here.
-from indexer import Indexer
 from ir_model import IRModel
-from author_clustering import AuthorClustering
 
 
 def index(request):
@@ -62,7 +60,7 @@ def search(request):
     elif len(year_author_results) > 0:
         results = year_author_results
 
-    # results = assign_pagerank(results, m)
+    results = assign_pagerank(results, m)
 
     results = sorted(results, key=(lambda k: k['score']), reverse=True)
 

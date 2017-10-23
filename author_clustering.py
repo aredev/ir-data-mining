@@ -1,8 +1,12 @@
 import csv
-import networkx as nx
 import pickle
+
+import networkx as nx
+
 import db_handler as db
 import graph_cluster as gc
+
+
 #from ir_model import IRModel
 
 class AuthorClustering:

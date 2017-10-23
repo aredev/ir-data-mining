@@ -1,14 +1,8 @@
-
-from whoosh.query import Query
-from whoosh.searching import Searcher
-from gensim import utils
-from gensim.corpora.dictionary import Dictionary
-import gensim
-
-
-
-
 import logging
+
+import gensim
+from gensim.corpora.dictionary import Dictionary
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 

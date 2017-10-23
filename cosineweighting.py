@@ -1,14 +1,12 @@
 # whoosh imports
 ###############################################
-from whoosh.fields import Schema, TEXT, ID, STORED
-from whoosh.index import create_in, exists_in, open_dir
-from whoosh.qparser import QueryParser
-from whoosh.scoring import WeightingModel, BaseScorer
-from whoosh.searching import Searcher
-import gensim
-
 import re
 from math import sqrt
+
+import gensim
+from whoosh.scoring import WeightingModel, BaseScorer
+
+
 #import matplotlib
 
 
