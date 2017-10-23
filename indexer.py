@@ -103,6 +103,8 @@ class Indexer(object):
                     author_names += db.DbHandler().get_author_by_id(author_id) + " "
                 self.writer.add_document(docId=str(docId), year=str(year), title=title, pdf_name=pdf_name,
                                          content=paper_text, authors=author_names)
+                print_progress(docs_indexed, row_count, prefix="Docs being indexed:", suffix=" Complete")
+                docs_indexed += 1
             self.writer.commit()
             elapsed_time = time.time() - start_time
             print("\nIndexing took {} seconds".format(elapsed_time))
