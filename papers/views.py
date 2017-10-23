@@ -71,7 +71,7 @@ def search(request):
         result['topics'] = m.lda.get_topics_for_document(result['docId'])
 
     end_time = datetime.datetime.now()
-    computation_time = (end_time-start_time).microseconds
+    computation_time = (end_time-start_time).seconds
 
     return render(request, 'results.html', {
         'results': results,
