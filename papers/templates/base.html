@@ -30,11 +30,11 @@
             {% block stats %} {% endblock %}
         </div>
 
-        <div class="col-12 col-lg-4">
+        <div class="col-12 col-lg-8">
             <form id="search-form" method="post" action="/papers/search">
                 {% csrf_token %}
                 <div class="input-group input-group-lg pb-5">
-                    <input id="search-input" name="q" class="form-control" type="text" autofocus autocomplete="off">
+                    <input id="search-input" name="q" class="form-control" type="text" value="{{query}}" autofocus autocomplete="off">
                     <span class="input-group-btn">
                 <input id="search-btn" class="btn btn-primary" type="submit" value="Search">
               </span>

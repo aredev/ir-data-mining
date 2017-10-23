@@ -11,7 +11,9 @@ def index(request):
     m = IRModel.get_instance()
     print(m.dummy.get_random())
     # return HttpResponse(str(m.dummy.get_random()))
-    return render(request, 'base.html')
+    return render(request, 'base.html', {
+        'query': ""
+    })
 
 
 def find_query_value(field, raw_title_query):
@@ -67,14 +69,19 @@ def search(request):
     # print("The beste result: " + str(results[0]))
     for result in results:
         authors, suggested_authors = m.authors.find_authors_by_paper(result['docId'])
-        result['suggested_authors'] = suggested_authors
-        result['authors'] = authors
+        result['suggested_authors'] = ", ".join(suggested_authors)
+        result['authors'] = ", ".join(authors)
         # result['topics'] = m.lda.get_topics_for_document(result['docId'])
 
     end_time = datetime.datetime.now()
     computation_time = (end_time-start_time).microseconds
 
-    return render(request, 'results.html', {'results': results, 'nr_of_results': len(results), 'time': computation_time})
+    return render(request, 'results.html', {
+        'results': results,
+        'query': query,
+        'nr_of_results': len(results),
+        'time': computation_time
+    })
 
 
 # This function assigns the pagerank of a paper.

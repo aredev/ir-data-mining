@@ -11,9 +11,7 @@
 <div class="alert alert-success" role="alert">
     <h4 class="alert-heading">{{ result.title }}</h4>
     <b>Written by:</b>
-    {% for author in result.authors %}
-        {{ author }}
-    {% endfor %}
+    {{result.authors }}
     <hr>
     <b>Generated topics:</b>
     {% for topic in result.topics %}
@@ -23,10 +21,9 @@
     {% if result.suggested_authors %}
         <hr>
         <b>Suggested authors:</b>
+        {{result.suggested_authors}}
     {% endif %}
-    {% for author in result.suggested_authors %}
-       {{author}}
-    {% endfor %}
+
 </div>
 {% empty %}
     <h3 style="text-align: center;">Sorry, no results found :(</h3>
