@@ -4,6 +4,8 @@ warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 
 import gensim
 from nltk.stem import WordNetLemmatizer
+from db_handler import DbHandler
+
 
 class LDA(object):
     # corpus = gensim.corpora.MalletCorpus('nips.mallet')
@@ -16,13 +18,19 @@ class LDA(object):
     # print(model.show_topics())
 
     def __init__(self) -> None:
+        self.docIds = []
+        self.db_handler = DbHandler()
         self.corpus = gensim.corpora.MalletCorpus('nips4topic.corpus')
         self.lda_model = gensim.models.LdaModel.load('nips.lda')
         self.lemmatizer = WordNetLemmatizer()
 
-    # TODO: set bounds on nr_topics, nr_topic_words to prevent out of bound exceptions.
+        # Get all of the doc id's
+        count, corpus = self.db_handler.get_table_rows_and_count("papers")
+        for doc in corpus:
+            self.docIds.append(doc[0])
+
     def get_topics_for_document(self, docId, nr_topics=3, nr_topic_words=5):
-        document_topics = self.lda_model.get_document_topics(self.corpus[int(docId)])
+        document_topics = self.lda_model.get_document_topics(self.corpus[self.get_index_for_docid(docId)])
         topics_by_id = sorted(document_topics, key=lambda tup: tup[1], reverse=True)
         topic_results = []
 
@@ -33,6 +41,12 @@ class LDA(object):
             top_words = self.lda_model.show_topic(topic_id)
             max_topics = min([nr_topic_words, len(top_words)])
             top_words = [self.lemmatizer.lemmatize(word) for (word, _) in top_words[:max_topics]]
-            top_words = list(set(top_words)) # remove the duplicates within a topic
+            top_words = list(set(top_words))  # remove the duplicates within a topic
             topic_results.append(top_words)
         return topic_results
+
+    def get_index_for_docid(self, docId):
+        try:
+            return self.docIds.index(int(docId))
+        except Exception as e:
+            return -1

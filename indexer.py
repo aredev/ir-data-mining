@@ -147,6 +147,5 @@ class Indexer(object):
             results_in_dict = []
             if len(results) > 0:
                 for idx, r in enumerate(results):
-                    print(r.docnum)
                     results_in_dict.append(self.from_hit_to_dict(r, results.score(idx)))
             return results_in_dict

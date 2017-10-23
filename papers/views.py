@@ -9,8 +9,6 @@ from ir_model import IRModel
 
 def index(request):
     m = IRModel.get_instance()
-    print(m.dummy.get_random())
-    # return HttpResponse(str(m.dummy.get_random()))
     return render(request, 'base.html', {
         'query': ""
     })
@@ -54,9 +52,9 @@ def search(request):
     body_query = pattern.sub('', query).strip()
     body_results = m.indexer.search(body_query)
 
-    results = combine_title_body_results(title_results, body_results)
+    results = combine_title_body_results(title_results, body_results, t=2.0)
 
-    #intersect with year results if it contains hits
+    # intersect with year results if it contains hits
     if len(results) > 0 and len(year_author_results) > 0:
         results = combine_with_year_results(results, year_author_results)
     elif len(year_author_results) > 0:
@@ -66,12 +64,11 @@ def search(request):
 
     results = sorted(results, key=(lambda k: k['score']), reverse=True)
 
-    # print("The beste result: " + str(results[0]))
     for result in results:
         authors, suggested_authors = m.authors.find_authors_by_paper(result['docId'])
         result['suggested_authors'] = ", ".join(suggested_authors)
         result['authors'] = ", ".join(authors)
-        # result['topics'] = m.lda.get_topics_for_document(result['docId'])
+        result['topics'] = m.lda.get_topics_for_document(result['docId'])
 
     end_time = datetime.datetime.now()
     computation_time = (end_time-start_time).microseconds

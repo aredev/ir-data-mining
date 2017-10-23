@@ -47,7 +47,6 @@ class GraphCluster:
         data = []
 
         A = nx.adjacency_matrix(self.graph)
-        print(A.todense())
 
         for key1, v in path_dict.items():
             print("v: " + str(v))

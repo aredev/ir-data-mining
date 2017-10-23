@@ -7,10 +7,9 @@ import db_handler as db
 import graph_cluster as gc
 
 
-#from ir_model import IRModel
+# from ir_model import IRModel
 
 class AuthorClustering:
-
     def __init__(self, cache_enabled=True, label_cache_filename="data\label_cache.csv"):
         self.LABEL_CACHE = label_cache_filename
         self.author_dict, self.author_graph = self.load_csv()
@@ -24,7 +23,7 @@ class AuthorClustering:
             print("Cache was not enabled or failed. Creating clusters ... This might take a while... (guessing 6min)")
             graph_cluster = gc.GraphCluster(self.author_graph)
             self.labels = graph_cluster.cluster_dbscan(epsilon=1.5, sample_min=10)
-            #self.labels = graph_cluster.cluster_agglomerative()
+            # self.labels = graph_cluster.cluster_agglomerative()
             self.save_labels_csv()
             self.path_dict = graph_cluster.shortest_path_dict()
             self.save_obj(self.path_dict, "path_dict")
@@ -37,16 +36,14 @@ class AuthorClustering:
         print("Number of outliers: " + str(len(self.find_cluster_by_label(-1))))
         cluster_sizes = sorted([self.labels.count(cs) for cs in unique_clusters], reverse=True)
         if len(cluster_sizes) > 20:
-            print("Average cluster size " + str(len(self.labels)/number_of_clusters) + " all sizes: " + str(cluster_sizes[0:20]))
+            print("Average cluster size " + str(len(self.labels) / number_of_clusters) + " all sizes: " + str(
+                cluster_sizes[0:20]))
         else:
             print("Average cluster size " + str(len(self.labels) / number_of_clusters) + " all sizes: " + str(
                 cluster_sizes))
         dist_averages = []
         for label in unique_clusters:
             dist_averages.append(self.average_distance(self.find_cluster_by_label(label)))
-
-
-        print("Average distances: " + str(dist_averages))
 
     def average_distance(self, nodes):
         size = len(nodes)
@@ -59,7 +56,7 @@ class AuthorClustering:
                     total_dist += 2 * float(self.path_dict[node1][node2])
                     j += 1
                 i += 1
-            return total_dist/(size*size)
+            return total_dist / (size * size)
         else:
             return 0
 
@@ -78,7 +75,8 @@ class AuthorClustering:
     def find_cluster_of_node(self, search_node):
         node_index = self.nodes.index(search_node)
         match_label = self.labels[node_index]
-        return [node for node, label in zip(self.nodes, self.labels) if label == match_label and not node == search_node]
+        return [node for node, label in zip(self.nodes, self.labels) if
+                label == match_label and not node == search_node]
 
     def find_cluster_by_label(self, match_label):
         return [node for node, label in zip(self.nodes, self.labels) if label == match_label]
@@ -122,7 +120,7 @@ class AuthorClustering:
 
                             author_graph.add_edge(author, row[2],
                                                   weight=weight / 2)  # TODO: investigate effect of this weighting
-                            #print(str(row[2]) + " -> " +str(author) + " prev weight: " + str(weight/2))
+                            # print(str(row[2]) + " -> " +str(author) + " prev weight: " + str(weight/2))
                         else:
                             author_graph.add_edge(author, row[2], weight=1)
 
@@ -167,11 +165,12 @@ class AuthorClustering:
         paper_authors = db.DbHandler().get_authors_by_paper_id(paper_id)
         result_authors = []
         for author in paper_authors:
-            print(result_authors+paper_authors)
-            closest = self.find_nearest_neighbour(author, result_authors+paper_authors)
+            print(result_authors + paper_authors)
+            closest = self.find_nearest_neighbour(author, result_authors + paper_authors)
             if not closest == author:
                 result_authors.append(closest)
-        return [db.DbHandler().get_author_by_id(pa) for pa in paper_authors], [db.DbHandler().get_author_by_id(ra) for ra in result_authors]
+        return [db.DbHandler().get_author_by_id(pa) for pa in paper_authors], [db.DbHandler().get_author_by_id(ra) for
+                                                                               ra in result_authors]
 
     # This function is for quick testing. It can be removed in the final version.
     def make_fake_graph(self):
@@ -210,7 +209,7 @@ class AuthorClustering:
 
     def save_obj(self, obj, name):
         try:
-            with open('data/'+ name + '.pkl', 'wb') as f:
+            with open('data/' + name + '.pkl', 'wb') as f:
                 pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
         except EnvironmentError:
             print("ERROR: Pickle could not be saved.")
