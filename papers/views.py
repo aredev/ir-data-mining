@@ -25,9 +25,9 @@ def search(request):
     query = request.POST.get('q')
     pattern = re.compile("[a,y,t]:\"[a-zA-Z0-9 \.]+\"")
     params = pattern.findall(query)
-    title_results = []  #list
-    year_results = []   #nested list
-    author_results = [] #nested_list
+    title_results = []  # list
+    year_results = []  # nested list
+    author_results = []  # nested_list
 
     for p in params:
         if p[0] == 't':
@@ -71,7 +71,7 @@ def search(request):
         result['topics'] = m.lda.get_topics_for_document(result['docId'])
 
     end_time = datetime.datetime.now()
-    computation_time = (end_time-start_time).seconds
+    computation_time = (end_time - start_time).seconds
 
     return render(request, 'results.html', {
         'results': results,
@@ -84,7 +84,8 @@ def search(request):
 # This function assigns the pagerank of a paper.
 def assign_pagerank(result_list, irm_model, y=1.0):
     for i, result in enumerate(result_list):
-        result_list[i]['score'] = result['score'] + y * irm_model.reputation_scores.get_reputation_score_by_paper(result['docId'])
+        result_list[i]['score'] = result['score'] + y * irm_model.reputation_scores.get_reputation_score_by_paper(
+            result['docId'])
     return result_list
 
 
@@ -104,7 +105,6 @@ def combine_title_body_results(title_results, body_results, t=1.0, b=1.0):
     for br in body_results:
         match = find_result_match(br['docId'], title_results)
         if match is not None:
-            print("MATCH")
             br['score'] = b * float(br['score']) + t * float(match['score'])
         else:
             br['score'] = b * float(br['score'])
@@ -116,6 +116,7 @@ def combine_title_body_results(title_results, body_results, t=1.0, b=1.0):
             tr['score'] = t * float(tr['score'])
             combined_list.append(tr)
     return combined_list
+
 
 def combine_author_year_results(author_results, year_results):
     combined_list = []

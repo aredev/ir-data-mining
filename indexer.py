@@ -4,15 +4,12 @@ import time
 from shutil import rmtree
 
 import psutil
-from whoosh.analysis import LowercaseFilter
 from whoosh.fields import Schema, TEXT, ID, STORED
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
 
 import db_handler as db
 from db_handler import DbHandler
-from filters.wordnet_lemmatizer import WordnetLemmatizerFilter
-from tokenizers.stanford import StanTokenizer
 from util.utils import print_progress
 
 
@@ -26,7 +23,7 @@ class Indexer(object):
         By default, the StandardAnalyzer() is used. This analyzer is composed of a RegexTokenizer with a LowercaseFilter
         and an optional StopFilter (for removing stopwords)
         """
-        self.analyzer = StanTokenizer() | LowercaseFilter() | WordnetLemmatizerFilter()  # | StopFilter()
+        # self.analyzer = StanTokenizer() | LowercaseFilter() | WordnetLemmatizerFilter()  # | StopFilter()
         """
         The whoosh.fields.TEXT indexes the text and stores the term positions to allow phrase searching
         TEXT fields use StandardAnalyzer by default. 
@@ -36,7 +33,7 @@ class Indexer(object):
         self.schema = Schema(
             docId=ID(stored=True),
             authors=TEXT(stored=True),
-            content=TEXT(analyzer=self.analyzer),
+            content=TEXT(),
             year=TEXT(stored=True),
             title=TEXT(stored=True),
             pdf_name=STORED,
@@ -140,7 +137,9 @@ class Indexer(object):
         """
         with self.ix.searcher() as searcher:
             parser = QueryParser(field, self.ix.schema)
-            query = parser.parse(query)
+            query = parser.parse(str(query))
+            all_terms = list(self.ix.reader().all_terms())
+            print("Number of terms in the vocabulary: {}".format(len(all_terms)))
             print("Query: " + str(query))
             results = searcher.search(query)
             print("Number of results: " + str(len(results)))

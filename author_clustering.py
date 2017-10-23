@@ -165,7 +165,6 @@ class AuthorClustering:
         paper_authors = db.DbHandler().get_authors_by_paper_id(paper_id)
         result_authors = []
         for author in paper_authors:
-            print(result_authors + paper_authors)
             closest = self.find_nearest_neighbour(author, result_authors + paper_authors)
             if not closest == author:
                 result_authors.append(closest)

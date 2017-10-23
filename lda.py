@@ -19,9 +19,10 @@ class LDA(object):
 
     def __init__(self) -> None:
         self.docIds = []
+        self.path = "data/lda"
         self.db_handler = DbHandler()
-        self.corpus = gensim.corpora.MalletCorpus('nips4topic.corpus')
-        self.lda_model = gensim.models.LdaModel.load('nips.lda')
+        self.corpus = gensim.corpora.MalletCorpus(self.path + '/nips4topic.corpus')
+        self.lda_model = gensim.models.LdaModel.load(self.path + '/nips.lda')
         self.lemmatizer = WordNetLemmatizer()
 
         # Get all of the doc id's

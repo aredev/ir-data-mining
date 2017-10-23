@@ -7,5 +7,6 @@ def main():
     indexer = Indexer()
     indexer.search("neural")
 
+
 if __name__ == "__main__":
     main()

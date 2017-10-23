@@ -2,30 +2,30 @@
 
 {% block stats %}
 
-{{nr_of_results}} results in {{time}} seconds
+    {{ nr_of_results }} results in {{ time }} seconds
 
 {% endblock %}
 
 {% block results %}
-{% for result in results %}
-<div class="alert alert-success" role="alert">
-    <h4 class="alert-heading">{{ result.title }}</h4>
-    <b>Written by:</b>
-    {{result.authors }}
-    <hr>
-    <b>Generated topics:</b>
-    {% for topic in result.topics %}
-        {{topic}}
+    {% for result in results %}
+        <div class="alert alert-success" role="alert">
+            <h4 class="alert-heading">{{ result.title }}</h4>
+            <b>Written by:</b>
+            {{ result.authors }}
+            <hr>
+            <b>Generated topics:</b>
+            {% for topic in result.topics %}
+                {{ topic }}
+            {% endfor %}
+
+            {% if result.suggested_authors %}
+                <hr>
+                <b>Suggested authors:</b>
+                {{ result.suggested_authors }}
+            {% endif %}
+
+        </div>
+    {% empty %}
+        <h3 style="text-align: center;">Sorry, no results found :(</h3>
     {% endfor %}
-
-    {% if result.suggested_authors %}
-        <hr>
-        <b>Suggested authors:</b>
-        {{result.suggested_authors}}
-    {% endif %}
-
-</div>
-{% empty %}
-    <h3 style="text-align: center;">Sorry, no results found :(</h3>
-{% endfor %}
 {% endblock %}

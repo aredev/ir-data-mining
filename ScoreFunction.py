@@ -48,7 +48,6 @@ class ReputationScores:
         score = self.score_list[index_number]
         return score
 
-
 # voorbeeld gebruik.
-#vb = ReputationScores()
-#print(vb.get_reputation_score_from_authors(['test', ['1', 10, 'a', 1000, 1001]]))
+# vb = ReputationScores()
+# print(vb.get_reputation_score_from_authors(['test', ['1', 10, 'a', 1000, 1001]]))
