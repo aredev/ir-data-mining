@@ -6,7 +6,7 @@ from author_clustering import AuthorClustering
 from ScoreFunction import ReputationScores
 from lda import LDA
 
-
+# Singleton class that holds the instantiations that are needed during execution of the queries.
 class IRModel:
 
     __instance = None

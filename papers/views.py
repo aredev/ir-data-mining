@@ -67,11 +67,11 @@ def search(request):
     results = sorted(results, key=(lambda k: k['score']), reverse=True)
 
     # print("The beste result: " + str(results[0]))
-    # for result in results:
-        # authors, suggested_authors = m.authors.find_authors_by_paper(result['docId'])
-        # result['suggested_authors'] = suggested_authors
-        # result['authors'] = authors
-        # result['topics'] = m.lda.get_topics_for_document(result['docId'])
+    for result in results:
+        authors, suggested_authors = m.authors.find_authors_by_paper(result['docId'])
+        result['suggested_authors'] = suggested_authors
+        result['authors'] = authors
+        result['topics'] = m.lda.get_topics_for_document(result['docId'])
 
     end_time = datetime.datetime.now()
     computation_time = (end_time-start_time).microseconds
