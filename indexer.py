@@ -46,11 +46,11 @@ class Indexer(object):
         """
         exists = exists_in(self.index_path)
         if exists:
-            print("exists")
+            print("Index already exists")
             # A valid index exists, reload the index
             self.__reload_index()
         else:
-            print("Not")
+            print("Index does not yet exist")
             # No valid index found, remove and recreate index
             rmtree(self.index_path, ignore_errors=True)
             self.__create_index()
