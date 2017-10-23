@@ -62,7 +62,7 @@ def search(request):
 
     results = assign_pagerank(results, m)
 
-    results = sorted(results, key=(lambda k: k['score']), reverse=True)
+    results = sorted(results, key=(lambda k: k['score']), reverse=True)[:10]
 
     for result in results:
         authors, suggested_authors = m.authors.find_authors_by_paper(result['docId'])
