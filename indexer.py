@@ -4,10 +4,11 @@ import time
 from shutil import rmtree
 
 import psutil
-from whoosh.analysis import LowercaseFilter
+from whoosh.analysis import LowercaseFilter, SpaceSeparatedTokenizer, CharsetFilter
 from whoosh.fields import Schema, TEXT, ID, STORED
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
+from whoosh.support.charset import accent_map
 
 import db_handler as db
 from db_handler import DbHandler
@@ -27,6 +28,7 @@ class Indexer(object):
         and an optional StopFilter (for removing stopwords)
         """
         self.analyzer = StanTokenizer() | LowercaseFilter() | WordnetLemmatizerFilter()  # | StopFilter()
+        self.author_analyzer = SpaceSeparatedTokenizer() | LowercaseFilter() | CharsetFilter(accent_map)
         """
         The whoosh.fields.TEXT indexes the text and stores the term positions to allow phrase searching
         TEXT fields use StandardAnalyzer by default. 
@@ -35,7 +37,7 @@ class Indexer(object):
         """
         self.schema = Schema(
             docId=ID(stored=True),
-            authors=TEXT(stored=True),
+            authors=TEXT(analyzer=self.author_analyzer, stored=True),
             content=TEXT(analyzer=self.analyzer),
             year=TEXT(stored=True),
             title=TEXT(stored=True),
