@@ -20,11 +20,13 @@ class GraphCluster:
         pos = nx.spring_layout(self.graph)
         nx.draw_networkx_nodes(self.graph, pos, node_color=labels, node_size=2, alpha=1)
         nx.draw_networkx_edges(self.graph, pos, width=0.5, edge_color='r', alpha=1)
+
         plt.savefig(filename)
         plt.clf()
 
     # The matrix conversion does not handle unconnected graphs.
     def path_dict_to_matrix(self, path_dict):
+        path_dict = path_dict
         keys = sorted(path_dict.keys(), key=int)
         matrix = np.zeros((len(keys), len(keys)))
         i = 0
@@ -35,7 +37,7 @@ class GraphCluster:
                 matrix[j][i] = matrix[i][j]
                 j += 1
             i += 1
-        if len(path_dict.keys()) < 100:
+        #if len(path_dict.keys()) < 100:
             #print(np.matrix(matrix))
         return np.matrix(matrix)
 
@@ -57,6 +59,7 @@ class GraphCluster:
                 # path_dict = nx.all_pairs_shortest_path_length(subgraph)
                 path_dict = nx.all_pairs_dijkstra_path_length(subgraph)
                 dist_matrix = GraphCluster(self.graph).path_dict_to_matrix(path_dict)
+                print(type(path_dict))
                 node_index = sorted(path_dict.keys(), key=int)
                 index_list.extend(node_index)  # path_dict.keys()) #sort is not necessary
                 db = skcluster.DBSCAN(eps=epsilon, metric="precomputed", min_samples=min([sample_min, len(node_index)])).fit(dist_matrix)

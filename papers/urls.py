@@ -7,7 +7,7 @@ print("Hallo!")
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
-    url(r'^papers', include('papers.urls'))
+    url(r'^search$', views.search)
 ]
 
 m = IRModel.get_instance()

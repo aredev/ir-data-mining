@@ -5,6 +5,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from ir_model import IRModel
+from idfweighting import IDF
 
 
 def index(request):
@@ -32,7 +33,7 @@ def search(request):
     for p in params:
         if p[0] == 't':
             title_query = "\'" + find_query_value('t:', p[3:-1]) + "\'"
-            title_results.extend(m.indexer.search(title_query, 'title'))
+            title_results.extend(m.indexer.search(title_query, 'title', IDF))
         elif p[0] == 'y':
             year_query = find_query_value('y:', p[3:-1])
             year_results.append(m.indexer.search(year_query, 'year'))
@@ -50,6 +51,8 @@ def search(request):
         year_author_results = author_results[0]
 
     body_query = pattern.sub('', query).strip()
+    if len(title_results) != 0:
+        title_results = m.indexer.search(body_query, 'title', IDF)
     body_results = m.indexer.search(body_query)
 
     results = combine_title_body_results(title_results, body_results)

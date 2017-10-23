@@ -8,8 +8,10 @@ from whoosh.analysis import LowercaseFilter
 from whoosh.fields import Schema, TEXT, ID, STORED
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
+from whoosh.scoring import BM25F
 
 import db_handler as db
+from idfweighting import IDF
 from db_handler import DbHandler
 from filters.wordnet_lemmatizer import WordnetLemmatizerFilter
 from tokenizers.stanford import StanTokenizer
@@ -129,14 +131,14 @@ class Indexer(object):
             'score': score
         }
 
-    def search(self, query, field="content"):
+    def search(self, query, field="content", weighting=BM25F):
         """
         Search using a given query
         :param field: 
         :param query: a query
         :return:
         """
-        with self.ix.searcher() as searcher:
+        with self.ix.searcher(weighting=weighting) as searcher:
             parser = QueryParser(field, self.ix.schema)
             query = parser.parse(query)
             print("Query: " + str(query))
