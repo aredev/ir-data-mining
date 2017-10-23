@@ -36,7 +36,7 @@ class GraphCluster:
                 j += 1
             i += 1
         if len(path_dict.keys()) < 100:
-            #print(np.matrix(matrix))
+            print(np.matrix(matrix))
         return np.matrix(matrix)
 
 
