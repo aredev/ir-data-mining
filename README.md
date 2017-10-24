@@ -4,19 +4,18 @@ This is our project for the course Information Retrieval and Data Mining given a
 # Requirements
 * Java Development Kit (JDK) with environt variable set (i.e. `JAVA_HOME` set to the installation directory, for example `C:\Program Files\Java\jdk1.8.0_101`)
 * [Anaconda](https://www.anaconda.com/download/), which is a package manager for Python.
-* Using the NLTK downloader, you have to install the following corpora and models as follows:
-    * Open a python console, and enter the following statements line by line:
-    ```python
-    import nltk
-    nltk.download()
-    ```
-    * A window will pop up, go to the tab __Corpora__, and go to the identifier __wordnet__. Select this identifier and click on _Download_.
 * [The Stanford CoreNLP](https://stanfordnlp.github.io/CoreNLP/): download and extract the folder to a desired location.
 * The SQLite database of the [Collection of NIPS papers](https://www.kaggle.com/benhamner/nips-papers). Make sure to put this file (which is named `database.sqlite` by default) in the directory called `data` in the root of this project.
 __NOTE__: In version 3.8.0 of CoreNLP (which is currently the lastest stable version), there is a problem with removing certain control characters from the text that will be tokenized. For some control characters, this resulted in a `JSONDecodeError`. In [this commit](https://github.com/stanfordnlp/CoreNLP/issues/522), the problem was solved. However, no there has not been a new release of the CoreNLP that contains this fix. Therefore, you should manually build the project, which can be found [here](https://github.com/stanfordnlp/CoreNLP). Building of CoreNLP is very simple, as it only requires you to have Ant and the JDK installed:
     * After following the steps listed on the repository, you will end up with a jar called `stanford-corenlp.jar`. 
     * Assuming you have downloaded and extracted the Stanford CoreNLP, go to the CoreNLP folder and remove the `stanford-corenlp-3.8.0.jar`, which came with the Stanford CoreNLP. 
     * Rename the previously build `stanford-corenlp.jar` to `stanford-corenlp-3.8.0.jar` and move it the location were you removed the jar that came origianlly with the package.  Thats it!
+ * The following Python packages: 
+ 	* NLTK (3.2.5 or higher)
+ 	* Django
+ 	* regex
+ 	* gensim
+
 
 
 # Running
@@ -36,9 +35,9 @@ To [run the Stanford CoreNLP as a server](https://stanfordnlp.github.io/CoreNLP/
 * If no port is specified, the default port will be 9000. 
 * Go into the source of the project, and open `stanford.py` in `tokenizers`, and change the port in the server url to the correct value.
 
-Make sure to install the latest version of NLTK (3.2.5).
-We also have to note that this is not the version that wil be installed using conda (at the time of writing).
-Therefore, make sure to use pip.
+In addition, to running the Stanford CoreNLP server, we need to have the corpus in Mallet format for each topic.
+These files have to be placed in the `data\lda` directory.
+In adition, the `data` directory contains the database in sqlite format, the authors, paper authors and scores in csv format.
 
 # Debugging
 To run the project with the web interface, you can use the following command:
@@ -52,3 +51,8 @@ To debug using the web interface, you can do the following in Pycharm:
 	* Script paramaters: `runserver`
 	* Working directory: `path\to\projectroot`
 * Run the project using this configuration
+
+# Notes
+It can happen that the output in the terminal is not showing the most recent output.
+Pressing some buttons while in the terminal causes the terminal to show any unprocessed output.
+Make sure to do this when you have the feeling it is taking forever.
