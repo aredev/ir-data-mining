@@ -1,12 +1,10 @@
 import datetime
 
-from ScoreFunction import ReputationScores
-from author_clustering import AuthorClustering
-from indexer import Indexer
-
-
+from clustering.author_clustering import AuthorClustering
+from indexer.indexer import Indexer
+from scores.ScoreFunction import ReputationScores
 # Singleton class that holds the instantiations that are needed during execution of the queries.
-from lda import LDA
+from topics.lda import LDA
 
 
 class IRModel:

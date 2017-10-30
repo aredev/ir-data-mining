@@ -1,5 +1,7 @@
 import sys
 
+from indexer.database.db_handler import DbHandler
+
 
 # Print iterations progress
 def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_length=50):
@@ -23,3 +25,11 @@ def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_lengt
     if iteration == total:
         sys.stdout.write('\n')
     sys.stdout.flush()
+
+
+def get_authors_for_doc_id(doc_id):
+    author_ids = DbHandler().get_authors_by_paper_id(doc_id)
+    author_names = ""
+    for author_id in author_ids:
+        author_names += DbHandler().get_author_by_id(author_id) + " "
+    return author_names
