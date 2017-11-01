@@ -104,8 +104,6 @@ class Indexer(object):
             self.writer.commit()
             elapsed_time = time.time() - start_time
             print("\nIndexing took {} seconds".format(elapsed_time))
-            all_terms = list(self.ix.reader().all_terms())
-            print("Number of terms in the vocabulary: {}".format(len(all_terms)))
         except Exception as e:
             # Stop the writer and remove the index
             self.writer.cancel()
@@ -186,3 +184,7 @@ class Indexer(object):
         if self.is_valid_abstract(abstract):
             return abstract
         return self.get_abstract_for_paper(title, year)
+
+    def get_index_information(self):
+        all_terms_iter = self.ix.reader().all_terms()
+        all_doc_ids_iter = self.ix.reader().all_doc_ids()

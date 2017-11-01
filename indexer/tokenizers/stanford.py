@@ -3,20 +3,26 @@ from nltk import internals
 from nltk.corpus import wordnet as wn
 from nltk.tag.stanford import CoreNLPPOSTagger
 from nltk.tokenize.stanford import CoreNLPTokenizer
+from nltk.parse import CoreNLPParser
 from whoosh.analysis import Composable, Token
 from whoosh.compat import text_type
+import logging
 
 
 class StanTokenizer(Composable):
     def __init__(self):
         self.server_url = "http://localhost:9000"
+        # Annotator dependencies:
+        # https://stanfordnlp.github.io/CoreNLP/dependencies.html
+        self.additional_properties = {
+            'tokenize.options': 'ptb3Escaping=false, unicodeQuotes=true, splitHyphenated=true, normalizeParentheses=false, normalizeOtherBrackets=false',
+            'annotators': 'tokenize, ssplit, pos, lemma'
+        }
         self.stanford_tokenizer = CoreNLPTokenizer(self.server_url)
         self.stanford_tagger = CoreNLPPOSTagger(self.server_url)
         # Taken from https://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
         self.remove = regex.compile(r'[\p{C}|\p{M}|\p{P}|\p{S}|\p{Z}]+', regex.UNICODE)
         """
-        See https://stackoverflow.com/questions/27116495/java-command-fails-in-nltk-stanford-pos-tagger
-        This will increase the maximum RAM size that java allows Stanford POS Tagger to use. 
         The '-xmx2G' changes the maximum allowable RAM to 2GB instead of the default 512MB.
         """
         internals.config_java(options='-xmx4G')
@@ -49,13 +55,18 @@ class StanTokenizer(Composable):
             pos = start_pos
             try:
                 # Tokenize
-                tokens = self.stanford_tokenizer.tokenize(value)
+                """
+                TODO: dit gaat nu niet goed.
+                We moeten eerst de text tokenizen.
+                Vervolgens 
+                """
+                tokens = self.stanford_tokenizer.tokenize(value, properties=self.additional_properties)
                 # Tag the tokens
+                # TODO de tagger tokenized opnieuw, waardoor haakjes worden genormalizeerd. Hier nog functie voor schrijven
                 tagged_tokens = self.stanford_tagger.tag(tokens)
                 # Remove punctuation and finally remove empty tokens
-                tagged_tokens = self._remove_punctuation_using_tags(tagged_tokens)
+                tagged_tokens = self._remove_punctuation(tagged_tokens)
                 tagged_tokens = self._remove_empty_tokens(tagged_tokens)
-                # print("Tagged and tokenized doc {} in: {}s".format(value[0:4], elapsed_time))
                 for (token, pos_tag) in tagged_tokens:
                     start = prevend
                     end = start + len(token)
@@ -76,10 +87,7 @@ class StanTokenizer(Composable):
                         prevend = start + len(token)
                         yield t
             except Exception as e:
-                """
-                Documents with doc id "6398" and "6421" (having index 6355 and 6378 receptively)
-                throw an exception when being tokenized. 
-                """
+                logging.critical("\n" + str(e))
                 pass
 
     def _remove_punctuation(self, tagged_tokens):

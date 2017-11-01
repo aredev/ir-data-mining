@@ -25,13 +25,9 @@ class LDA(object):
         self.lda_model = gensim.models.LdaModel.load(self.path + '/nips.lda')
         self.lemmatizer = WordNetLemmatizer()
 
-        # Get all of the doc id's
-        count, corpus = self.db_handler.get_table_rows_and_count("papers")
-        for doc in corpus:
-            self.docIds.append(doc[0])
-
     def get_topics_for_document(self, docId, nr_topics=3, nr_topic_words=5):
-        document_topics = self.lda_model.get_document_topics(self.corpus[self.get_index_for_docid(docId)])
+        document_topics = self.lda_model.get_document_topics(
+            self.corpus[DbHandler.get_instance().get_index_for_docid(docId)])
         topics_by_id = sorted(document_topics, key=lambda tup: tup[1], reverse=True)
         topic_results = []
 
@@ -45,12 +41,6 @@ class LDA(object):
             top_words = list(set(top_words))  # remove the duplicates within a topic
             topic_results.append(top_words)
         return topic_results
-
-    def get_index_for_docid(self, docId):
-        try:
-            return self.docIds.index(int(docId))
-        except Exception as e:
-            return -1
 
     def build_lda_model(self, filename='nips.mallet'):
         corpus = gensim.corpora.MalletCorpus(filename)

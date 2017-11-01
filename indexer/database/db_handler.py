@@ -19,6 +19,7 @@ class DbHandler(object):
         self.db_name = filename
         self.conn = sqlite3.connect(self.data_path + self.db_name)
         self.cursor = self.conn.cursor()
+        self.doc_ids = self._get_doc_ids()
         # self.create_tables()
 
     def create_tables(self):
@@ -152,3 +153,27 @@ class DbHandler(object):
             insert_author_paper_query = "INSERT INTO paper_authors(paper_id, author_id) VALUES ( " + str(paper_id) + \
                                         "," + str(author_id) + ");"
             self.conn.execute(insert_author_paper_query)
+
+    def _get_doc_ids(self):
+        """
+        Get all of the doc ids in the collection of publications.
+        :return: list of all the doc ids for all of the publications
+        """
+        doc_ids = []
+        count, corpus = self.get_table_rows_and_count("papers")
+        for doc in corpus:
+            doc_ids.append(doc[0])
+        return doc_ids
+
+    def get_index_for_docid(self, docId):
+        """
+        Determine the index of the publication in the list of all publications given the doc id.
+        The reason for this function is that given doc ids are not successive: there are gaps of more than 1 between
+        successive doc ids.
+        :param docId: The doc id
+        :return: The index of the doc id in the list of publications. In it was not present, -1 will be returned.
+        """
+        try:
+            return self.doc_ids.index(int(docId))
+        except Exception as e:
+            return -1

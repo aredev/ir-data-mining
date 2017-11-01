@@ -1,6 +1,6 @@
 # To update all the packages listed in this document
 # install pip-tools and run the following command:
-# ip-compile -U requirements.txt
+# pip-compile -U requirements.txt
 gensim>=3.0.1
 nltk>=3.2.5
 django>=1.11.3

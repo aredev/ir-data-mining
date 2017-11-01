@@ -33,3 +33,4 @@ def get_authors_for_doc_id(doc_id):
     for author_id in author_ids:
         author_names += DbHandler().get_author_by_id(author_id) + " "
     return author_names
+

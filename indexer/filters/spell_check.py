@@ -1,7 +1,6 @@
-from nltk.stem import WordNetLemmatizer
 from whoosh.analysis import Filter
 from util.spell import Spell
-
+import enchant
 
 class SpellCheckFilter(Filter):
     def __init__(self):
@@ -11,10 +10,13 @@ class SpellCheckFilter(Filter):
         http://norvig.com/spell-correct.html
         """
         self.spell = Spell().get_instance()
+        self.dic_us = enchant.Dict("en_US")
+        self.dic_en = enchant.Dict("en_GB")
 
     def __call__(self, tokens):
         for t in tokens:
-            t.is_morph = True
-            org_text = t.text
-            t.text = self.spell.correction(t.text)
+            if not self.dic_en.check(t.text) and not self.dic_us.check(t.text):
+                uncorrected = t.text
+                t.text = self.spell.correction(t.text)
+                # print("Corrected '{}' to '{}'".format(uncorrected, t.text))
             yield t
