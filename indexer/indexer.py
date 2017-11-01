@@ -42,7 +42,7 @@ class Indexer(object):
             authors=TEXT(stored=True),
             year=TEXT(stored=True),
             abstract=TEXT(stored=True),
-            content=TEXT(vector=True),
+            content=TEXT(vector=True, analyzer=self.analyzer),
             pdf_name=STORED,
         )
         """
