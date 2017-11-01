@@ -7,7 +7,7 @@ from shutil import rmtree
 import psutil
 import scholarly
 from whoosh.analysis import LowercaseFilter
-from whoosh.fields import Schema, TEXT, ID, STORED
+from whoosh.fields import Schema, TEXT, ID, STORED, FieldType
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
 
@@ -35,13 +35,14 @@ class Indexer(object):
         To specify a different analyzer, use the analyzer keyword argument to the constructor, 
         e.g. TEXT(analyzer=analysis.StemmingAnalyzer())
         """
+        # Read the Vectors section in http://whoosh.readthedocs.io/en/latest/schema.html
         self.schema = Schema(
             docId=ID(stored=True),
             title=TEXT(stored=True),
             authors=TEXT(stored=True),
             year=TEXT(stored=True),
             abstract=TEXT(stored=True),
-            content=TEXT(analyzer=self.analyzer),
+            content=TEXT(vector=True),
             pdf_name=STORED,
         )
         """
@@ -186,5 +187,14 @@ class Indexer(object):
         return self.get_abstract_for_paper(title, year)
 
     def get_index_information(self):
-        all_terms_iter = self.ix.reader().all_terms()
         all_doc_ids_iter = self.ix.reader().all_doc_ids()
+        for doc_num in all_doc_ids_iter:
+            """
+            ix.reader().vector returns a whoosh.matching.Matcher.
+            See http://whoosh.readthedocs.io/en/latest/api/matching.html
+            """
+            v = self.ix.reader().vector(doc_num, "content")
+            # Convert to a list of (word, frequency) tuples
+            v_items = list(v.items_as("frequency"))
+            print("Document with doc_id {} has the following terms:".format(doc_num))
+            print(v_items)
