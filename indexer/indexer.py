@@ -7,15 +7,17 @@ from shutil import rmtree
 import psutil
 import scholarly
 from whoosh.analysis import LowercaseFilter
-from whoosh.fields import Schema, TEXT, ID, STORED, FieldType
+from whoosh.fields import Schema, TEXT, ID, STORED
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
 
 from indexer.database.db_handler import DbHandler
+from indexer.filters.spell_check import SpellCheckFilter
 from indexer.filters.wordnet_lemmatizer import WordnetLemmatizerFilter
 from indexer.tokenizers.stanford import StanTokenizer
 from util import utils
-from indexer.filters.spell_check import SpellCheckFilter
+from indexer.filters.punctuation import PunctuationFilter
+from indexer.filters.stanford_lemmatizer import StanfordLemmatizerFilter
 
 
 class Indexer(object):
@@ -28,7 +30,8 @@ class Indexer(object):
         By default, the StandardAnalyzer() is used. This analyzer is composed of a RegexTokenizer with a LowercaseFilter
         and an optional StopFilter (for removing stopwords)
         """
-        self.analyzer = StanTokenizer() | LowercaseFilter() | SpellCheckFilter() | WordnetLemmatizerFilter() # | StopFilter()
+        self.analyzer = StanTokenizer() | PunctuationFilter() | LowercaseFilter() | SpellCheckFilter() | \
+                        WordnetLemmatizerFilter() | StanfordLemmatizerFilter()
         """
         The whoosh.fields.TEXT indexes the text and stores the term positions to allow phrase searching
         TEXT fields use StandardAnalyzer by default. 
@@ -197,4 +200,4 @@ class Indexer(object):
             # Convert to a list of (word, frequency) tuples
             v_items = list(v.items_as("frequency"))
             print("Document with doc_id {} has the following terms:".format(doc_num))
-            print(v_items)
+            # print(v_items)
