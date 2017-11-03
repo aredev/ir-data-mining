@@ -2,7 +2,7 @@ import logging
 
 import regex
 from nltk import internals
-from nltk.parse.corenlp import GenericCoreNLPParser
+from nltk.parse.corenlp import CoreNLPParser
 from whoosh.analysis import Composable, Token
 from whoosh.compat import text_type
 
@@ -15,8 +15,7 @@ class StanTokenizer(Composable):
             'tokenize.options': 'ptb3Escaping=false, unicodeQuotes=true, splitHyphenated=true, normalizeParentheses=false, normalizeOtherBrackets=false',
             'annotators': 'tokenize, ssplit, pos, lemma'
         }
-        self.stanford_abstract_parser = GenericCoreNLPParser(self.server_url)
-        self.stanford_abstract_parser.parser_annotator = 'depparse'
+        self.stanford_parser = CoreNLPParser(self.server_url)
         # The '-xmx2G' changes the maximum allowable RAM to 2GB instead of the default 512MB.
         internals.config_java(options='-xmx4G')
 
@@ -52,7 +51,7 @@ class StanTokenizer(Composable):
         else:
             pos = start_pos
             try:
-                json_result = self.stanford_abstract_parser.api_call(value, properties=self.additional_properties)
+                json_result = self.stanford_parser.api_call(value, properties=self.additional_properties)
                 for sentence in json_result['sentences']:
                     for token in sentence['tokens']:
                         if token:
