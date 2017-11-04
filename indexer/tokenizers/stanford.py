@@ -1,6 +1,5 @@
 import logging
 
-import regex
 from nltk import internals
 from nltk.parse.corenlp import CoreNLPParser
 from whoosh.analysis import Composable, Token
@@ -9,13 +8,12 @@ from whoosh.compat import text_type
 
 class StanTokenizer(Composable):
     def __init__(self):
-        self.server_url = "http://localhost:9000"
         # Annotator dependencies, see https://stanfordnlp.github.io/CoreNLP/dependencies.html
         self.additional_properties = {
             'tokenize.options': 'ptb3Escaping=false, unicodeQuotes=true, splitHyphenated=true, normalizeParentheses=false, normalizeOtherBrackets=false',
             'annotators': 'tokenize, ssplit, pos, lemma'
         }
-        self.stanford_parser = CoreNLPParser(self.server_url)
+        self.stanford_parser = CoreNLPParser()
         # The '-xmx2G' changes the maximum allowable RAM to 2GB instead of the default 512MB.
         internals.config_java(options='-xmx4G')
 

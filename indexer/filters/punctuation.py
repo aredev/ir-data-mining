@@ -1,13 +1,11 @@
-import regex
 from whoosh.analysis import Filter
+
+from util import utils
 
 
 class PunctuationFilter(Filter):
     def __init__(self):
-        # Taken from https://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
-        self.remove = regex.compile(r'[\p{C}|\p{M}|\p{P}|\p{S}|\p{Z}]+', regex.UNICODE)
-        self.punctuation_tags = {"#", "$", '"', ",", ".", ":", "``", "-LRB-", "-RRB-", "-RCB-", "-LCB-", "CD", "LS",
-                                 "SYM"}
+        return
 
     def __call__(self, tokens):
         tokens = self._remove_punctuation(tokens)
@@ -23,7 +21,7 @@ class PunctuationFilter(Filter):
         :return: A list of (token, tag) tuples, where any punctuation in the tokens has been removed.
         """
         for token in tokens:
-            token.text = self.remove.sub(u" ", token.text).strip()
+            token.text = utils.remove_punctuation.sub(u" ", token.text).strip()
             yield token
 
     def _remove_punctuation_using_tags(self, tokens):
@@ -37,7 +35,7 @@ class PunctuationFilter(Filter):
         :return: A list of (token, tag) tuples, where any token with a punctuation tag has been removed
         """
         for token in tokens:
-            if token.pos not in self.punctuation_tags:
+            if token.pos not in utils.punctuation_tags:
                 yield token
 
     def _remove_empty_tokens(self, tokens):

@@ -9,6 +9,8 @@ class WordnetLemmatizerFilter(Filter):
             transformed_tag = self._penn2morphy(t.pos)
             if transformed_tag:
                 t.text = WordNetLemmatizer().lemmatize(t.text, transformed_tag)
+            else:
+                t.text = WordNetLemmatizer().lemmatize(t.text)
             yield t
 
     def _penn2morphy(self, penntag, return_none=False):

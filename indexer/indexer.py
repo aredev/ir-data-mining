@@ -12,12 +12,11 @@ from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
 
 from indexer.database.db_handler import DbHandler
-from indexer.filters.spell_check import SpellCheckFilter
-from indexer.filters.wordnet_lemmatizer import WordnetLemmatizerFilter
-from indexer.tokenizers.stanford import StanTokenizer
-from util import utils
 from indexer.filters.punctuation import PunctuationFilter
 from indexer.filters.stanford_lemmatizer import StanfordLemmatizerFilter
+from indexer.tokenizers.stanford import StanTokenizer
+from util import utils
+from util.spell import Spell
 
 
 class Indexer(object):
@@ -26,12 +25,12 @@ class Indexer(object):
         self.index_path = "index"
         self.ix = None
         self.writer = None
+        self.spell = Spell.get_instance()
         """
         By default, the StandardAnalyzer() is used. This analyzer is composed of a RegexTokenizer with a LowercaseFilter
         and an optional StopFilter (for removing stopwords)
         """
-        self.analyzer = StanTokenizer() | PunctuationFilter() | LowercaseFilter() | SpellCheckFilter() | \
-                        WordnetLemmatizerFilter() | StanfordLemmatizerFilter()
+        self.analyzer = StanTokenizer() | PunctuationFilter() | StanfordLemmatizerFilter() | LowercaseFilter()
         """
         The whoosh.fields.TEXT indexes the text and stores the term positions to allow phrase searching
         TEXT fields use StandardAnalyzer by default. 
@@ -95,7 +94,7 @@ class Indexer(object):
         utils.print_progress(0, row_count, prefix="Docs being indexed:", suffix=" Complete")
         try:
             docs_indexed = 0
-            for document in corpus[0:2]:
+            for document in corpus:
                 doc_id, year, title, _, pdf_name, abstract, paper_text = document
                 if self.is_valid_document(paper_text, title):
                     # TODO remove this comment to fetch abstract from online
@@ -175,11 +174,17 @@ class Indexer(object):
         :param paper_text:
         :return:
         """
-        for word in title.split():
-            # Check if word is a substring of the paper text (ignoring case)
-            if not re.search(word, paper_text, re.IGNORECASE):
-                return False
-        return True
+        try:
+            paper_text = utils.remove_punctuation.sub(u" ", paper_text)
+            for stopword in utils.stops:
+                # Check if any of the stopwords is present as a substring in the paper text (ignoring case)
+                if re.search(stopword, paper_text, re.IGNORECASE):
+                    return True
+            return False
+        except Exception as e:
+            print(e)
+            print("\nThis occurred for the document with the following title: '{}'".format(title))
+
 
     def is_valid_abstract(self, abstract):
         return abstract.lower() != "abstract missing"
