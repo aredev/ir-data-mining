@@ -6,10 +6,11 @@ This is our project for the course Information Retrieval and Data Mining given a
 * [Anaconda](https://www.anaconda.com/download/), which is a package manager for Python. As we will use PyPi later on, you can add the `Scripts` directory, which can be found in the Anaconda root installation directory (e.g. `C:\ProgramData\Anaconda3\Scripts`) to your PATH system variable. Make sure to reopen any terminal in order to have the `pip` command available.
 * [The Stanford CoreNLP](https://stanfordnlp.github.io/CoreNLP/): download and extract the folder to a desired location.
 * The SQLite database of the [Collection of NIPS papers](https://www.kaggle.com/benhamner/nips-papers). Make sure to put this file (which is named `database.sqlite` by default) in the directory called `data` in the root of this project.
-* The _wordnet_ resource, which can be downloaded using the NLTK Downloader. In PyCharm, open up a Python console (Tools -> Python Console) and enter the following commands:
+* The _wordnet_ and _stopwords_ resource, which can be downloaded using the NLTK Downloader. In PyCharm, open up a Python console (Tools -> Python Console) and enter the following commands:
 ```python
 >>> import nltk
 >>> nltk.download('wordnet')
+>>> nltk.download('stopwords')
 ```
 
 # Notes
