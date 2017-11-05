@@ -5,7 +5,9 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
-    url(r'^search$', views.search)
+    url(r'^search$', views.search),
+
+    url(r'^(?P<author_id>[0-9]+)/$', views.getAuthorById)
 ]
 
 m = IRModel.get_instance()

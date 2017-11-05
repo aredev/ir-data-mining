@@ -142,6 +142,7 @@ class Indexer(object):
         :return:
         """
         with self.ix.searcher() as searcher:
+            # Perform some spellchecking
             parser = QueryParser(field, self.ix.schema)
             query = parser.parse(query_string)
 

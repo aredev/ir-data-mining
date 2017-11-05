@@ -1,13 +1,16 @@
 import datetime
 import re
 
+from django.http import HttpResponse
 from django.shortcuts import render
 
 # Create your views here.
 from ir_model import IRModel
+from papers.models import Author, Paper
 
 
 def index(request):
+
     m = IRModel.get_instance()
     return render(request, 'base.html', {
         'query': ""
@@ -23,6 +26,11 @@ def search(request):
     m = IRModel.get_instance()
 
     query = request.POST.get('q')
+    author = request.POST.get('author')
+    years = request.POST.get('year')
+    year_from = years.split(',')[0]
+    year_to = years.split(',')[1]
+
     pattern = re.compile("[a,y,t]:\"[a-zA-Z0-9 \.]+\"")
     params = pattern.findall(query)
     title_results = []  # list
@@ -73,9 +81,23 @@ def search(request):
     end_time = datetime.datetime.now()
     computation_time = (end_time - start_time).seconds
 
+    retrieved_paper = Paper.objects.get(id=6604)
+    print(retrieved_paper.title)
+    print(retrieved_paper.authors.all())
+
+    results = [
+        retrieved_paper
+    ]
+
+    previous_query = {
+        'q': query,
+        'author': author,
+        'years': years
+    }
+
     return render(request, 'results.html', {
         'results': results,
-        'query': query,
+        'query': previous_query,
         'nr_of_results': len(results),
         'time': computation_time
     })
@@ -135,3 +157,14 @@ def find_result_match(paper_id, result_list):
         if result['docId'] == paper_id:
             return result
     return None
+
+
+
+""""
+CRUDS PER MODEL
+"""
+
+
+def getAuthorById(author_id):
+    author = Author.objects.get(id=author_id)
+    return HttpResponse(str(author))

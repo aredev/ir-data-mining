@@ -1,4 +1,6 @@
-from indexer.indexer import Indexer
+
+from indexer import Indexer
+from ir_model import IRModel
 
 
 def main():
@@ -7,6 +9,10 @@ def main():
     indexer = Indexer()
     # indexer.get_index_information()
     indexer.search("susuki")
+    # indexer = Indexer()
+    # indexer.search("neural")
+
+    IRModel()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import datetime
 
 from clustering.author_clustering import AuthorClustering
+from db_handler import DbHandler
 from indexer.indexer import Indexer
 from scores.ScoreFunction import ReputationScores
 # Singleton class that holds the instantiations that are needed during execution of the queries.
@@ -23,9 +24,10 @@ class IRModel:
             start_time = datetime.datetime.now()
             print("Starting initialization of IR Model! at " + str(start_time))
             self.indexer = Indexer()
-            self.reputation_scores = ReputationScores()
-            self.authors = AuthorClustering(cache_enabled=True)
-            self.lda = LDA()
+            self.dbHandler = DbHandler()
+            # self.reputation_scores = ReputationScores()
+            # self.authors = AuthorClustering(cache_enabled=True)
+            # self.lda = LDA()
             IRModel.__instance = self
             end_time = datetime.datetime.now()
             print(
