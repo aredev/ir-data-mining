@@ -184,3 +184,4 @@ data/
 *.dict
 *.pkl
 *.sqlite
+*.csv
