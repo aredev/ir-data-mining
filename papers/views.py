@@ -6,7 +6,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from ir_model import IRModel
-from papers.models import Author, Paper
+from papers.models import Author, Paper, Topic
 
 
 def index(request):
@@ -165,6 +165,11 @@ CRUDS PER MODEL
 """
 
 
-def getAuthorById(author_id):
+def getAuthorById(request, author_id):
     author = Author.objects.get(id=author_id)
-    return HttpResponse(str(author))
+    return render(request, 'author.html', {'author': author})
+
+
+def getTopicById(request, topic_id):
+    topic = Topic.objects.get(id=topic_id)
+    return render(request, 'topic.html', {'topic': topic})
