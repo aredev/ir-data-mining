@@ -12,7 +12,6 @@ class LDA(object):
         corpus = gensim.corpora.MalletCorpus('nips.mallet')
 
         dictionary = gensim.corpora.Dictionary.from_corpus(corpus, corpus.id2word)
-        dictionary.filter_n_most_frequent(10)
 
         #Build a model
         model = gensim.models.LdaModel(corpus, id2word=corpus.id2word, alpha='auto', num_topics=13)
@@ -21,9 +20,35 @@ class LDA(object):
         model = gensim.models.LdaModel.load('nips.lda')
         print(model.show_topics())
 
-    def generate_dtm(self):
+
+    def build_dtm_model(self):
+        """
+        Method using DtmModel in gensim
+        :return:
+        """
+
         corpus = gensim.corpora.MalletCorpus('nips.mallet')
 
-        model = gensim.models.wrappers.DtmModel('libs/dtm-win64.exe', corpus, [5, 8], num_topics=5, initialize_lda=True, id2word=corpus.id2word)
+        time_slices = [90, 93, 101, 127, 140, 143, 144, 150, 150, 151, 152, 152, 152, 158, 197, 198, 204, 207, 207, 207,
+                       217, 250, 262, 292, 306, 360, 368, 403, 411, 567]
+
+        ldaseq = gensim.models.LdaSeqModel(corpus=corpus, time_slice=time_slices, num_topics=15)
+        ldaseq.save('nips.dtm')
+
+
+    def generate_dtm(self):
+        """
+        Method for DTM using the C++ wrapper
+        :return:
+        """
+        corpus = gensim.corpora.MalletCorpus('nips.mallet')
+
+        # This .exe file contains a memory leak, try the one in libs/no-leak, only runnable on linux
+        time_slices = [90, 93, 101, 127, 140, 143, 144, 150, 150, 151, 152, 152, 152, 158, 197, 198, 204, 207, 207, 207,
+                       217, 250, 262, 292, 306, 360, 368, 403, 411, 567]
+
+        model = gensim.models.wrappers.DtmModel('libs/dtm-win64.exe', corpus, time_slices=time_slices,
+                                                num_topics=15, initialize_lda=True, id2word=corpus.id2word)
         topics = model.show_topics(num_topics=3, times=1, formatted=True)
         print(topics)
+        model.save('nips.dtm')
