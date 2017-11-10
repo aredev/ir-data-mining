@@ -21,7 +21,7 @@ from util.spell import Spell
 
 
 class Indexer(object):
-    def __init__(self):
+    def __init__(self, mode="normal"):
         self.db_handler = DbHandler()
         self.index_path = "index"
         self.ix = None
@@ -194,13 +194,36 @@ class Indexer(object):
 
     def get_index_information(self):
         all_doc_ids_iter = self.ix.reader().all_doc_ids()
+        v_list = []
+        a = 0
         for doc_num in all_doc_ids_iter:
             """
             ix.reader().vector returns a whoosh.matching.Matcher.
             See http://whoosh.readthedocs.io/en/latest/api/matching.html
             """
-            v = self.ix.reader().vector(doc_num, "content")
-            # Convert to a list of (word, frequency) tuples
-            v_items = list(v.items_as("frequency"))
-            print("Document with doc_id {} has the following terms:".format(doc_num))
-            # print(v_items)
+            a += 1
+            print(a)
+            doc_id = self.get_docId(doc_num)
+            try:
+                v = self.ix.reader().vector(doc_num, "content")
+                # Convert to a list of (word, frequency) tuples
+                v_items = list(v.items_as("frequency"))
+            except:
+                v_items = []
+                print("NO VECTOR")
+
+            v_list.append([doc_id, v_items])
+        return v_list
+
+    def get_voca(self):
+        voca = list(self.ix.reader().all_terms())
+
+        return voca
+
+    def get_docId(self, doc_num):
+
+        fields = self.ix.reader().stored_fields(doc_num)
+
+        docId = fields["docId"]
+
+        return docId
