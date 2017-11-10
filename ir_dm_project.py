@@ -5,7 +5,7 @@ def main():
     print("Use django to launch project using: \'python.exe manage.py runserver\'")
 
     indexer = Indexer()
-    indexer.get_index_information()
+    # indexer.get_index_information()
     indexer.search("susuki")
 
 

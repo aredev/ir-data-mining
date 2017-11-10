@@ -4,10 +4,10 @@ import re
 import time
 from datetime import datetime
 from shutil import rmtree
-from tqdm import tqdm
 
 import psutil
-from whoosh.analysis import LowercaseFilter
+from tqdm import tqdm
+from whoosh.analysis import LowercaseFilter, StopFilter
 from whoosh.fields import Schema, TEXT, ID, STORED, DATETIME
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
@@ -31,7 +31,7 @@ class Indexer(object):
         By default, the StandardAnalyzer() is used. This analyzer is composed of a RegexTokenizer with a LowercaseFilter
         and an optional StopFilter (for removing stopwords)
         """
-        self.analyzer = StanTokenizer() | PunctuationFilter() | StanfordLemmatizerFilter() | LowercaseFilter()
+        self.analyzer = self.__determine_analyzer(mode)
         """
         The whoosh.fields.TEXT indexes the text and stores the term positions to allow phrase searching
         TEXT fields use StandardAnalyzer by default. 
@@ -61,6 +61,12 @@ class Indexer(object):
             # No valid index found, remove and recreate index
             rmtree(self.index_path, ignore_errors=True)
             self.__create_index()
+
+    def __determine_analyzer(self, mode):
+        return {
+            'normal': StanTokenizer() | PunctuationFilter() | StanfordLemmatizerFilter() | LowercaseFilter(),
+            'author topic modelling': StanTokenizer() | PunctuationFilter() | StanfordLemmatizerFilter() | LowercaseFilter() | StopFilter(),
+        }[mode]
 
     def __reload_index(self):
         """
@@ -162,7 +168,7 @@ class Indexer(object):
         :param year: The year of the publication
         :return: A snippet of the abstract for the given publication taken from Google Scholar.
         """
-        #TODO implement this function
+        # TODO implement this function
         abstract = ""
         return abstract
 
