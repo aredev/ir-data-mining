@@ -2,12 +2,13 @@ import os
 import os.path
 import re
 import time
+from datetime import datetime
 from shutil import rmtree
+from tqdm import tqdm
 
 import psutil
-import scholarly
 from whoosh.analysis import LowercaseFilter
-from whoosh.fields import Schema, TEXT, ID, STORED
+from whoosh.fields import Schema, TEXT, ID, STORED, DATETIME
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
 
@@ -39,10 +40,10 @@ class Indexer(object):
         """
         # Read the Vectors section in http://whoosh.readthedocs.io/en/latest/schema.html
         self.schema = Schema(
-            docId=ID(stored=True),
+            doc_id=ID(stored=True),
             title=TEXT(stored=True),
             authors=TEXT(stored=True),
-            year=TEXT(stored=True),
+            pub_date=DATETIME(stored=True),
             abstract=TEXT(stored=True),
             content=TEXT(vector=True, analyzer=self.analyzer),
             pdf_name=STORED,
@@ -91,18 +92,17 @@ class Indexer(object):
         # Add documents to the index
         row_count, corpus = DbHandler().get_table_rows_and_count("papers")
         start_time = time.time()
-        utils.print_progress(0, row_count, prefix="Docs being indexed:", suffix=" Complete")
         try:
             docs_indexed = 0
-            for document in corpus:
+            for document in tqdm(corpus):
                 doc_id, year, title, _, pdf_name, abstract, paper_text = document
                 if self.is_valid_document(paper_text, title):
                     # TODO remove this comment to fetch abstract from online
                     # abstract = self.determine_abstract(abstract, title, str(year))
                     author_names = utils.get_authors_for_doc_id(doc_id)
-                    self.writer.add_document(docId=str(doc_id), year=str(year), title=title, pdf_name=pdf_name,
+                    pub_date = datetime(year=year, month=1, day=1)
+                    self.writer.add_document(doc_id=str(doc_id), pub_date=pub_date, title=title, pdf_name=pdf_name,
                                              content=paper_text, authors=author_names, abstract=abstract)
-                    utils.print_progress(docs_indexed, row_count, prefix="Docs being indexed:", suffix=" Complete")
                     docs_indexed += 1
             self.writer.commit()
             elapsed_time = time.time() - start_time
@@ -131,7 +131,7 @@ class Indexer(object):
     def search(self, query_string, field="content"):
         """
         Search using a given query
-        :param field: 
+        :param field:
         :param query: a query
         :return:
         """
@@ -162,9 +162,8 @@ class Indexer(object):
         :param year: The year of the publication
         :return: A snippet of the abstract for the given publication taken from Google Scholar.
         """
-        search_query = scholarly.search_pubs_query(title + " " + year)
-        result = next(search_query)
-        abstract = result.bib['abstract']
+        #TODO implement this function
+        abstract = ""
         return abstract
 
     def is_valid_document(self, paper_text, title):
@@ -184,7 +183,6 @@ class Indexer(object):
         except Exception as e:
             print(e)
             print("\nThis occurred for the document with the following title: '{}'".format(title))
-
 
     def is_valid_abstract(self, abstract):
         return abstract.lower() != "abstract missing"

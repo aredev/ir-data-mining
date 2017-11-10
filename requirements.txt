@@ -1,9 +1,10 @@
 # To update all the packages listed in this document
 # install pip-tools and run the following command:
 # pip-compile -U requirements.txt
-gensim>=3.0.1
-nltk>=3.2.5
-django>=1.11.3
-whoosh>=2.7.4
-scholarly>=0.2.3
-regex>=2017.09.23
+gensim==3.0.1
+nltk==3.2.5
+django==1.11.3
+whoosh==2.7.4
+tqdm==4.19.4
+regex==2017.09.23
+psutil==5.4.1
