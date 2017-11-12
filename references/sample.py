@@ -3,7 +3,7 @@
 import sqlite3
 
 import sqlite3
-database_location = "references.sqlite"
+database_location = "../data/references.sqlite"
 
 con = sqlite3.connect(database_location)
 
