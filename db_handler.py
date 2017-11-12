@@ -169,25 +169,3 @@ class DbHandler(object):
     def get_author_by_id(self, author_id):
         query = "SELECT name FROM authors WHERE id == " + str(author_id)
         return self.conn.execute(query).fetchone()[0]
-
-    def insert_paper_and_its_authors(self, paper, authors):
-        """
-        Insert a paper, list of authors and the link between them
-        :param paper: 
-        :param authors: 
-        :return: 
-        """
-        insert_paper_query = "INSERT INTO papers(id, title, year, pdf_name, abstract, paper_text) VALUES (" + \
-            str(paper.docId) + "," + str(paper.title) + "," + str(paper.year) + "," + str(paper.pdfName) + "," + \
-            str(paper.abstract) + str(paper.text) + ");"
-        self.conn.execute(insert_paper_query)
-        paper_id = self.cursor.lastrowid
-
-        for author in authors:
-            insert_author_query = "INSERT INTO authors(name, score) VALUES ( " + str(author.name) + ", " + str(author.score) + " );"
-            self.conn.execute(insert_author_query)
-            author_id = self.cursor.lastrowid
-
-            insert_author_paper_query = "INSERT INTO paper_authors(paper_id, author_id) VALUES ( " + str(paper_id) + \
-                                        "," + str(author_id) + ");"
-            self.conn.execute(insert_author_paper_query)

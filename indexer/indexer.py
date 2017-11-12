@@ -6,11 +6,9 @@ from datetime import datetime
 from shutil import rmtree
 
 import psutil
-
 from tqdm import tqdm
 from whoosh.analysis import LowercaseFilter, StopFilter
 from whoosh.fields import Schema, TEXT, ID, STORED, DATETIME
-
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
 
@@ -65,9 +63,10 @@ class Indexer(object):
             self.__create_index()
 
     def __determine_analyzer(self, mode):
+        tokenizer = StanTokenizer()
         return {
-            'normal': StanTokenizer() | PunctuationFilter() | StanfordLemmatizerFilter() | LowercaseFilter(),
-            'author topic modelling': StanTokenizer() | PunctuationFilter() | StanfordLemmatizerFilter() | LowercaseFilter() | StopFilter(),
+            'normal': tokenizer | PunctuationFilter() | StanfordLemmatizerFilter() | LowercaseFilter(),
+            'author topic modelling': tokenizer | PunctuationFilter() | StanfordLemmatizerFilter() | LowercaseFilter() | StopFilter(),
         }[mode]
 
     def __reload_index(self):
@@ -102,7 +101,7 @@ class Indexer(object):
         start_time = time.time()
         try:
             docs_indexed = 0
-            for document in tqdm(corpus):
+            for document in tqdm(corpus[:5]):
                 doc_id, year, title, _, pdf_name, abstract, paper_text = document
                 if self.is_valid_document(paper_text, title):
                     # TODO remove this comment to fetch abstract from online
@@ -130,9 +129,9 @@ class Indexer(object):
 
     def from_hit_to_dict(self, hit, score):
         return {
-            'docId': hit['docId'],
+            'docId': hit['doc_id'],
             'title': hit['title'],
-            'year': hit['year'],
+            'year': hit['pub_date'],
             'score': score
         }
 
@@ -171,10 +170,10 @@ class Indexer(object):
         :param year: The year of the publication
         :return: A snippet of the abstract for the given publication taken from Google Scholar.
         """
-        search_query = scholarly.search_pubs_query(title + " " + year)
-        result = next(search_query)
-        abstract = result.bib['abstract']
-        return abstract
+        # search_query = scholarly.search_pubs_query(title + " " + year)
+        # result = next(search_query)
+        # abstract = result.bib['abstract']
+        # return abstract
 
     def is_valid_document(self, paper_text, title):
         """
