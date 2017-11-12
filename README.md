@@ -27,6 +27,12 @@ This is our project for the course Information Retrieval and Data Mining given a
     * Install nltk using PyPi (`pip install nltk`)
     * Ignore any messages from PyCharm stating that the requirement (nltk >= 3.2.5) is not fulfilled.
 
+* Download the latest sqlite database from here...
+
+* If you encounter the module not found exception for a local module and you are using PyCharm, then mark the corresponding directory as source. For example if PyCharm mentions that the tokenizers.stanford module is not found, then mark the indexer folder (where stanford is a child of tokenizers in indexer) as a source.
+This can be done by going to File > Settings > Project Structure > indexer > Mark as source in the top of the pop up window.
+
+* If your Windows Powershell / Git Bash doesn't respond, right click and hit Properties. In the Edit Options disable the Quick Edit mode and the Insert Mode.
 
 * "NLTK was unable to find the `JAVA_HOME` environment variable". Make sure you have set the environment variable.
 If you have done this, restart PyCharm and try again. This should work.

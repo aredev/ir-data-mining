@@ -30,22 +30,20 @@ def search(request):
     year_from = years.split(',')[0]
     year_to = years.split(',')[1]
 
-    pattern = re.compile("[a,y,t]:\"[a-zA-Z0-9 \.]+\"")
-    params = pattern.findall(query)
     title_results = []  # list
     year_results = []  # nested list
     author_results = []  # nested_list
 
-    for p in params:
-        if p[0] == 't':
-            title_query = "\'" + find_query_value('t:', p[3:-1]) + "\'"
-            # title_results.extend(m.indexer.search(title_query, 'title'))
-        elif p[0] == 'y':
-            year_query = find_query_value('y:', p[3:-1])
-            # year_results.append(m.indexer.search(year_query, 'year'))
-        elif p[0] == 'a':
-            author_query = "\'*" + find_query_value('a:', p[3:-1]) + "*\'"
-            # author_results.append(m.indexer.search(author_query, 'authors'))
+    # for p in params:
+    #     if p[0] == 't':
+    #         title_query = "\'" + find_query_value('t:', p[3:-1]) + "\'"
+    #         # title_results.extend(m.indexer.search(title_query, 'title'))
+    #     elif p[0] == 'y':
+    #         year_query = find_query_value('y:', p[3:-1])
+    #         # year_results.append(m.indexer.search(year_query, 'year'))
+    #     elif p[0] == 'a':
+    #         author_query = "\'*" + find_query_value('a:', p[3:-1]) + "*\'"
+    #         # author_results.append(m.indexer.search(author_query, 'authors'))
     #
     # need_to_intersect_year_author = len(year_results) > 0 and len(author_results) > 0
     # year_author_results = []
@@ -80,13 +78,16 @@ def search(request):
     end_time = datetime.datetime.now()
     computation_time = (end_time - start_time).seconds
 
-    retrieved_paper = Paper.objects.get(id=6555)
-    print(retrieved_paper.title)
-    print(retrieved_paper.authors.all())
+    papers = []
+    results = m.indexer.search(query)
+    author_results = m.indexer.search(author, 'authors')
+    print(year_from)
+    year_results = m.indexer.search("[" + year_from + " TO " + year_to + "]", 'pub_date')
 
-    results = [
-        retrieved_paper
-    ]
+    print(year_results)
+
+    for result in results:
+        papers.append(Paper.objects.get(id=result['docId']))
 
     previous_query = {
         'q': query,
@@ -95,9 +96,9 @@ def search(request):
     }
 
     return render(request, 'results.html', {
-        'results': results,
+        'results': papers,
         'query': previous_query,
-        'nr_of_results': len(results),
+        'nr_of_results': len(papers),
         'time': computation_time
     })
 

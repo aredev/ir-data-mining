@@ -101,7 +101,7 @@ class Indexer(object):
         start_time = time.time()
         try:
             docs_indexed = 0
-            for document in tqdm(corpus[:5]):
+            for document in tqdm(corpus[:100]):
                 doc_id, year, title, _, pdf_name, abstract, paper_text = document
                 if self.is_valid_document(paper_text, title):
                     # TODO remove this comment to fetch abstract from online
