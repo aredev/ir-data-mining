@@ -1,0 +1,44 @@
+{% extends 'detailpage.html' %}
+
+{% block header %}
+
+<h1 class="property__title">{{topic.name}}</h1>
+<div class="property__header">
+    <div class="property__actions">
+        <button class="btn--default" type="button"><i class="fa fa-refresh"></i>Update status</button> <button class="btn--default" type="button"><i class="fa fa-star"></i>Add to favorites</button>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css">
+
+<div id="visualization"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+
+<script type="text/javascript">
+    var container = document.getElementById('visualization');
+      var items = [
+      {% for evolution in topic.evolution.all %}
+        {x: '{{evolution.year}}', y: {{evolution.score}}},
+        {% endfor %}
+      ];
+
+  var dataset = new vis.DataSet(items);
+  var options = {
+    start: items[0].x,
+    end: items[items.length-1].x
+  };
+  var graph2d = new vis.Graph2d(container, dataset, options);
+</script>
+
+{% endblock %}
+
+{% block details %}
+
+    {% for paper in topic.topics_for.all %}
+
+        {{paper.paper.title}}
+
+    {% endfor %}
+
+{% endblock %}

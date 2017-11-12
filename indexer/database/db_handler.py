@@ -11,7 +11,7 @@ class DbHandler(object):
             DbHandler()
         return DbHandler.__instance
 
-    def __init__(self, path="data/", filename="database.sqlite"):
+    def __init__(self, path="../ir-data-mining/data/", filename="database.sqlite"):
         if not os.path.exists(path + filename):
             raise FileNotFoundError("Could not find the database file at the following location:\n{}".format(
                 os.path.abspath(path + filename)))
@@ -49,12 +49,12 @@ class DbHandler(object):
         self.cursor.execute(create_authors_table)
 
         create_references_table = """ 
-        CREATE TABLE IF NOT EXISTS references (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            paper_id INTEGER NOT NULL,
-            reference_paper_id INTEGER NOT NULL,
+        CREATE TABLE IF NOT EXISTS `references` (
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+            `paper_id` INTEGER NOT NULL,
+            `reference_paper_id` INTEGER NOT NULL,
 
-            CONSTRAINT paper_reference_unique UNIQUE(paper_id, reference_paper_id)
+            CONSTRAINT paper_reference_unique UNIQUE(`paper_id`, `reference_paper_id`)
         );
         """
         self.cursor.execute(create_references_table)
@@ -100,6 +100,38 @@ class DbHandler(object):
         );
         """
         self.cursor.execute(create_topic_evolutions_table)
+
+        create_paper_suggested_authors = """
+        CREATE TABLE IF NOT EXISTS paper_suggested_authors (
+            id INTEGER PRIMARY KEY,
+            author_id INTEGER NOT NULL,
+            paper_id INTEGER NOT NULL,
+
+            CONSTRAINT author_paper_unique UNIQUE (author_id, paper_id)
+        );
+        """
+        self.cursor.execute(create_paper_suggested_authors)
+
+        print("Alter author table?")
+        alter_author_table = """ 
+        DROP TABLE authors;
+        CREATE TABLE authors (
+            id INTEGER PRIMARY KEY;
+            name TEXT NOT NULL;
+            pagerank FLOAT NOT NULL;
+            h_index INTEGER NOT NULL;
+        );
+        """
+
+        self.cursor.execute(alter_author_table)
+
+        add_column_to_suggested = """
+        ALTER TABLE `suggested_authors` ADD COLUMN `similarity` FLOAT;
+        """
+
+        self.cursor.execute(add_column_to_suggested)
+
+
 
     def db_info(self):
         for name in self.get_table_names():

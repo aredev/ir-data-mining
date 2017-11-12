@@ -1,0 +1,78 @@
+{% extends 'detailpage.html' %}
+
+{% block header %}
+
+<h1 class="property__title">{{author.name}}</h1>
+<div class="property__header">
+    <div class="property__price">
+        <strong class="property__price-value">{{author.score}}</strong><span class="property__price-label">Score</span>
+    </div>
+    <div class="property__actions">
+        <button class="btn--default" type="button"><i class="fa fa-refresh"></i>Update status</button> <button class="btn--default" type="button"><i class="fa fa-star"></i>Add to favorites</button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block details %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css">
+
+
+<style type="text/css">
+    #mynetwork {
+        width: 600px;
+        height: 400px;
+        border: 1px solid lightgray;
+    }
+</style>
+
+<ul class="nav nav-tabs">
+    <li class="active"><a data-toggle="tab" href="#home">Publications</a></li>
+    <li><a data-toggle="tab" href="#menu1">Suggested authors</a></li>
+</ul>
+
+<div class="tab-content">
+    <div id="home" class="tab-pane fade in active">
+        {% for publication in author.papers.all %}
+        {{publication.title}}
+        {% endfor %}
+    </div>
+    <div id="menu1" class="tab-pane fade">
+        <div id="mynetwork"></div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+
+<script type="text/javascript">
+    // create an array with nodes
+    var nodes = new vis.DataSet([
+        {id: 1, label: '{{author.name}}'},
+        {% for sa in author.suggested_authors.all %}
+            {id: {{sa.suggested_author.id}}, label: '{{sa.suggested_author.name}}'},
+        {% endfor %}
+    ]);
+
+    // create an array with edges
+    var edges = new vis.DataSet([
+        {% for sa in author.suggested_authors.all %}
+            {from: 1, to: {{sa.suggested_author.id}}},
+        {% endfor %}
+    ]);
+
+    // create a network
+    var container = document.getElementById('mynetwork');
+
+    // provide the data in the vis format
+    var data = {
+        nodes: nodes,
+        edges: edges
+    };
+    var options = {};
+
+    // initialize your network!
+    var network = new vis.Network(container, data, options);
+</script>
+
+{% endblock %}

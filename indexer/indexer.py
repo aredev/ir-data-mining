@@ -6,9 +6,11 @@ from datetime import datetime
 from shutil import rmtree
 
 import psutil
+
 from tqdm import tqdm
 from whoosh.analysis import LowercaseFilter, StopFilter
 from whoosh.fields import Schema, TEXT, ID, STORED, DATETIME
+
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.qparser import QueryParser
 
@@ -169,8 +171,9 @@ class Indexer(object):
         :param year: The year of the publication
         :return: A snippet of the abstract for the given publication taken from Google Scholar.
         """
-        # TODO implement this function
-        abstract = ""
+        search_query = scholarly.search_pubs_query(title + " " + year)
+        result = next(search_query)
+        abstract = result.bib['abstract']
         return abstract
 
     def is_valid_document(self, paper_text, title):

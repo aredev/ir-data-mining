@@ -23,8 +23,8 @@ class IRModel:
         else:
             start_time = datetime.datetime.now()
             print("Starting initialization of IR Model! at " + str(start_time))
-            self.indexer = Indexer()
-            self.dbHandler = DbHandler()
+            # self.indexer = Indexer()
+            # self.dbHandler = DbHandler()
             # self.reputation_scores = ReputationScores()
             # self.authors = AuthorClustering(cache_enabled=True)
             # self.lda = LDA()

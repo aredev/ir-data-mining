@@ -1,19 +1,22 @@
-
-from indexer import Indexer
-from ir_model import IRModel
+# from indexer import Indexer
+# from ir_model import IRModel
+# from data.bart_migration import BartMigration
+from data.bart_migration import BartMigration
+from data.frans_migration import FransMigration
+from db_handler import DbHandler
 
 
 def main():
     print("Use django to launch project using: \'python.exe manage.py runserver\'")
 
-    indexer = Indexer()
-    # indexer.get_index_information()
-    indexer.search("susuki")
     # indexer = Indexer()
     # indexer.search("neural")
 
-    IRModel()
+    # IRModel()
 
+    # DbHandler().create_tables()
+    # BartMigration().migrate_from_csv()
+    FransMigration().parse_from_csv()
 
 if __name__ == "__main__":
     main()

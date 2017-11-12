@@ -28,11 +28,11 @@ class DbHandler(object):
          );
         """
         self.cursor.execute(create_papers_table)
-
-        drop_authors_table = """ 
-        DROP TABLE authors;
-        """
-        self.cursor.execute(drop_authors_table)
+        #
+        # drop_authors_table = """
+        # DROP TABLE authors;
+        # """
+        # self.cursor.execute(drop_authors_table)
 
         create_authors_table = """
                  CREATE TABLE IF NOT EXISTS authors (
@@ -95,6 +95,51 @@ class DbHandler(object):
         );
         """
         self.cursor.execute(create_topic_evolutions_table)
+
+        create_paper_suggested_authors = """
+        CREATE TABLE IF NOT EXISTS `paper_suggested_authors` (
+            `id` INTEGER PRIMARY KEY,
+            `author_id` INTEGER NOT NULL,
+            `paper_id` INTEGER NOT NULL,
+            `similarity` FLOAT,
+
+            CONSTRAINT author_paper_unique UNIQUE (author_id, paper_id)
+        );
+        """
+        self.cursor.execute(create_paper_suggested_authors)
+
+        create_suggested_papers_table = """
+             CREATE TABLE IF NOT EXISTS `suggested_papers` (
+                 `id` INTEGER PRIMARY KEY,
+                 `paper_id` INTEGER NOT NULL,
+                 `suggested_paper_id` INTEGER NOT NULL,
+
+                 CONSTRAINT paper_suggested_paper UNIQUE (paper_id, suggested_paper_id)
+             );
+             """
+        self.cursor.execute(create_suggested_papers_table)
+        #
+        alter_author_table = """
+            DROP TABLE IF EXISTS `authors`;
+        """
+        self.cursor.execute(alter_author_table)
+
+        add_new_author_table = """
+        CREATE TABLE `authors` (
+                    `id` INTEGER PRIMARY KEY,
+                    `name` TEXT NOT NULL,
+                    `pagerank` FLOAT,
+                    `h_index` INTEGER
+                );
+        """
+
+        self.cursor.execute(add_new_author_table)
+
+        # add_column_to_suggested = """
+        # ALTER TABLE `suggested_authors` ADD COLUMN `score` FLOAT;
+        # """
+        #
+        # self.cursor.execute(add_column_to_suggested)
 
     def db_info(self):
         for name in self.get_table_names():

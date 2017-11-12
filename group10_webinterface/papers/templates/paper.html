@@ -1,0 +1,57 @@
+{% extends 'detailpage.html' %}
+
+{% block header %}
+
+    <h1 class="property__title">{{paper.title}}</h1>
+    <div class="property__header">
+        <div class="property__price">
+            <strong class="property__price-value">{{author.score}}</strong><span class="property__price-label">Score</span>
+        </div>
+        <div class="property__actions">
+            <button class="btn--default" type="button"><i class="fa fa-refresh"></i>Update status</button> <button class="btn--default" type="button"><i class="fa fa-star"></i>Add to favorites</button>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block details %}
+
+<ul class="nav nav-tabs">
+  <li class="active"><a data-toggle="tab" href="#home">References</a></li>
+  <li><a data-toggle="tab" href="#menu1">Referenced By</a></li>
+  <li><a data-toggle="tab" href="#menu2">Similar papers</a></li>
+</ul>
+
+<div class="tab-content">
+  <div id="home" class="tab-pane fade in active">
+
+      {% for reference in paper.references.all %}
+
+            {{ reference.reference_paper.title }}
+
+      {% endfor %}
+
+
+  </div>
+  <div id="menu1" class="tab-pane fade">
+
+      {% for paper in paper.referenced_by.all %}
+
+        {{paper.paper.title}}
+
+      {% endfor %}
+
+  </div>
+  <div id="menu2" class="tab-pane fade">
+
+       <!--{% for paper in paper.suggested_papers.all %}-->
+
+        <!--{{paper}}-->
+
+      <!--{% endfor %}-->
+
+  </div>
+</div>
+
+{% endblock %}
