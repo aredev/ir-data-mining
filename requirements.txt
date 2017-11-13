@@ -8,3 +8,7 @@ whoosh==2.7.4
 tqdm==4.19.4
 regex==2017.09.23
 psutil==5.4.1
+networkx==2.0
+matplotlib==2.1.0
+sklearn==0.0
+urllib3==1.22
