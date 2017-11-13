@@ -31,60 +31,46 @@ def search(request):
     year_to = years.split(',')[1]
 
     title_results = []  # list
+    body_results = []
     year_results = []  # nested list
     author_results = []  # nested_list
 
-    # for p in params:
-    #     if p[0] == 't':
-    #         title_query = "\'" + find_query_value('t:', p[3:-1]) + "\'"
-    #         # title_results.extend(m.indexer.search(title_query, 'title'))
-    #     elif p[0] == 'y':
-    #         year_query = find_query_value('y:', p[3:-1])
-    #         # year_results.append(m.indexer.search(year_query, 'year'))
-    #     elif p[0] == 'a':
-    #         author_query = "\'*" + find_query_value('a:', p[3:-1]) + "*\'"
-    #         # author_results.append(m.indexer.search(author_query, 'authors'))
-    #
-    # need_to_intersect_year_author = len(year_results) > 0 and len(author_results) > 0
-    # year_author_results = []
-    # if need_to_intersect_year_author:
-    #     year_author_results = combine_author_year_results(author_results[0], year_results[0])
-    # elif len(year_results) > 0:
-    #     year_author_results = year_results[0]
-    # elif len(author_results) > 0:
-    #     year_author_results = author_results[0]
-    #
-    # body_query = pattern.sub('', query).strip()
-    # body_results = m.indexer.search(body_query)
-    #
-    # results = combine_title_body_results(title_results, body_results, t=2.0)
-    #
-    # # intersect with year results if it contains hits
-    # if len(results) > 0 and len(year_author_results) > 0:
-    #     results = combine_with_year_results(results, year_author_results)
-    # elif len(year_author_results) > 0:
-    #     results = year_author_results
-    #
-    # results = assign_pagerank(results, m)
-    #
-    # results = sorted(results, key=(lambda k: k['score']), reverse=True)[:10]
-    #
-    # for result in results:
-    #     authors, suggested_authors = m.authors.find_authors_by_paper(result['docId'])
-    #     result['suggested_authors'] = ", ".join(suggested_authors)
-    #     result['authors'] = ", ".join(authors)
-    #     result['topics'] = m.lda.get_topics_for_document(result['docId'])
-    #
+    title_results.extend(m.indexer.search(query, 'title'))
+    body_results.extend(m.indexer.search(query, 'content'))
+    year_results.append(m.indexer.search("[" + year_from + " TO " + year_to + "]", 'pub_date'))
+    author_results.append(m.indexer.search(author, 'authors'))
+
+    need_to_intersect_year_author = len(year_results) > 0 and len(author_results) > 0
+    year_author_results = []
+    if need_to_intersect_year_author:
+        year_author_results = combine_author_year_results(author_results[0], year_results[0])
+    elif len(year_results) > 0:
+        year_author_results = year_results[0]
+    elif len(author_results) > 0:
+        year_author_results = author_results[0]
+
+    results = combine_title_body_results(title_results, body_results, t=2.0)
+
+    # intersect with year results if it contains hits
+    if len(results) > 0 and len(year_author_results) > 0:
+        results = combine_with_year_results(results, year_author_results)
+    elif len(year_author_results) > 0:
+        results = year_author_results
+
+    results = assign_pagerank(results, m)
+
+    results = sorted(results, key=(lambda k: k['score']), reverse=True)[:10]
+
     end_time = datetime.datetime.now()
     computation_time = (end_time - start_time).seconds
 
     papers = []
-    results = m.indexer.search(query)
-    author_results = m.indexer.search(author, 'authors')
-    print(year_from)
-    year_results = m.indexer.search("[" + year_from + " TO " + year_to + "]", 'pub_date')
-
-    print(year_results)
+    # results = m.indexer.search(query)
+    # author_results = m.indexer.search(author, 'authors')
+    # print(year_from)
+    # year_results = m.indexer.search("[" + year_from + " TO " + year_to + "]", 'pub_date')
+    #
+    # print(year_results)
 
     for result in results:
         papers.append(Paper.objects.get(id=result['docId']))
@@ -105,10 +91,11 @@ def search(request):
 
 # This function assigns the pagerank of a paper.
 def assign_pagerank(result_list, irm_model, y=1.0):
-    for i, result in enumerate(result_list):
-        result_list[i]['score'] = result['score'] + y * irm_model.reputation_scores.get_reputation_score_by_paper(
-            result['docId'])
     return result_list
+    # for i, result in enumerate(result_list):
+        # result_list[i]['score'] = result['score'] + y * irm_model.reputation_scores.get_reputation_score_by_paper(
+        #     result['docId'])
+    # return result_list
 
 
 def combine_with_year_results(combined_title_body_results, year_results):
