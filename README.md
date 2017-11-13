@@ -27,7 +27,7 @@ This is our project for the course Information Retrieval and Data Mining given a
     * Install nltk using PyPi (`pip install nltk`)
     * Ignore any messages from PyCharm stating that the requirement (nltk >= 3.2.5) is not fulfilled.
 
-* Download the latest sqlite database from here...
+* November 13th: Download the latest sqlite database from [here](https://mega.nz/#!oaZAxRJR). This version contains the references, authors, author graph. No topics yet, some abstracts may be missing.
 
 * If you encounter the module not found exception for a local module and you are using PyCharm, then mark the corresponding directory as source. For example if PyCharm mentions that the tokenizers.stanford module is not found, then mark the indexer folder (where stanford is a child of tokenizers in indexer) as a source.
 This can be done by going to File > Settings > Project Structure > indexer > Mark as source in the top of the pop up window.
