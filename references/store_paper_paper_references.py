@@ -36,12 +36,14 @@ sep = ""
 for paper_id, paper_text in input_con.execute("SELECT id, paper_text FROM papers;").fetchall():
     for paper_title, paper2_id in paper_mapping.items():
 
+        if paper_text is None:
+            break
         # TODO: For now ignore the following papers
         #  - 5096 (Distributed k-Means and k-Median Clustering on General Topologies) and
         #  - 3116 (Stability of K-Means Clustering)
         # Their titles have incorrect values in the database, 'Distributed',
         # and 'Stability of', respectively.
-        if paper2_id in [5096, 3116]:
+        if paper2_id in [5096, 3116, paper_id]:
             break
         
         search_text = paper_text
