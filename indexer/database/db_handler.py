@@ -130,6 +130,13 @@ class DbHandler(object):
         query = "SELECT name FROM authors WHERE id == " + str(author_id)
         return self.conn.execute(query).fetchone()[0]
 
+    def get_title_by_paper_id(self, paper_id):
+        query = "SELECT title FROM papers WHERE id == " + str(paper_id)
+        title = self.conn.execute(query).fetchone()
+        if title is None:
+            return "TITLE OF " + paper_id + " NOT FOUND"
+        return title[0]
+
     def insert_paper_and_its_authors(self, paper, authors):
         """
         Insert a paper, list of authors and the link between them
