@@ -38,6 +38,7 @@ def load_paper_authors2():
         print("Failed to open data/paper_authors.csv")
     return paper_author_list
 
+
 """This function loads all the papers with their authors to a list[paperd, authors_id1, authors_id2, ...]"""
 def load_paper_authors():
     paper_author_list = []
@@ -54,6 +55,7 @@ def load_paper_authors():
                 paper_id = row[1]
                 paper_author_list.append([row[1], row[2]])   # set paper name
     return paper_author_list
+
 
 """This function loads all the author id's to a list[author_id]"""
 def load_authors_id():
@@ -92,6 +94,7 @@ def combine_vectors(vector_list, type="max"):
                 combined_vector.append(np.mean([row[i] for row in vector_list]))
     return combined_vector
 
+
 """"This function saves the result to a csv file"""
 def save_paper_2_author_sug(result_list, filename="data_atm/paper_2_author_sug_max_with_small.csv"):
     try:
@@ -101,5 +104,32 @@ def save_paper_2_author_sug(result_list, filename="data_atm/paper_2_author_sug_m
     except EnvironmentError:
         print("ERROR: saving labels to cache failed.")
 
+
+"""This function searches the paper-author relation from load_paper_authors() to find the author of one paper"""
+def get_author_by_paper(paper_authors, paper_id):
+    for paper in paper_authors:
+        if paper[0] == paper_id:
+            return paper[1:]
+    return []
+
+
+"""This function evaluates the suggestions csv"""
+def evaluate_suggestions(filename):
+    papers = load_paper_authors()
+    ratio = []
+    try:
+        with open(filename, 'r', encoding="utf8") as csvfile:
+            graph_reader = csv.reader(csvfile, delimiter=',')
+            for row in graph_reader:
+                authors = get_author_by_paper(papers, row[0])
+                ratio.append(len(set(authors).intersection(row[1:])) / len(authors))
+
+    except EnvironmentError:
+        print("Failed to open data/authors.csv")
+    print("Median ratio of author found as suggestion: " + str(np.median(ratio)) + " Avg: " + str(np.mean(ratio)))
+    return ratio
+
+
 if __name__ == "__main__":
-    create_paper2author_sug()
+    evaluate_suggestions("data_atm/paper_2_author_sug_max_with_small.csv")
+    #create_paper2author_sug()
