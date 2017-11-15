@@ -12,11 +12,15 @@ from ptm.utils import get_top_words
 with open('data_atm/corpus.pkl', 'rb') as f:
     corpus = pickle.load(f)
 
+"""doc_author.pkl is not a 2D list[papers][authors]?  (1240 did not work with 1241)"""
 with open('data_atm/doc_author.pkl', 'rb') as f:
     doc_author = pickle.load(f)
 
+"""voca is a list of words"""
 with open('data_atm/voca_atm.pkl', 'rb') as f:
     voca = pickle.load(f)
+    print(voca)
+
 
 with open('data/authors.csv', 'r') as f:
     reader = csv.reader(f)
@@ -39,6 +43,10 @@ print("data preparation completed")
 subset = 2000
 n_topics = [20, 25, 30, 35, 40, 45, 50]
 eval_list = []
+
+
+
+"""
 for n_topic in n_topics:
     try:
         with open('data_atm/finalized_model.sav', 'rb') as f:
@@ -77,3 +85,4 @@ for n_topic in n_topics:
         # for k in range(n_topic):
         #     top_words = get_top_words(model.TW, voca, k, 30)
         #     print('topic ', k , ','.join(top_words))
+"""

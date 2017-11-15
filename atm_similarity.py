@@ -10,7 +10,7 @@ from similarity.wpcc import wpearson
 from similarity.cosine import get_cosine
 
 
-class atm_similarity(object):
+class atm_similarity:
     def __init__(self, n_authors=10, n_topics=10, type='cosine'):
         # Laad lijst van scores
 
@@ -23,7 +23,6 @@ class atm_similarity(object):
 
         with open('data_atm/score_list.pkl', 'rb') as f:
             score_list = pickle.load(f)
-
         self.score_list = np.array(score_list)
 
         self.N = n_topics
@@ -48,6 +47,7 @@ class atm_similarity(object):
 
         return x
 
+    """Returns the author topic vector for given an author index. (author_id is not the same as author index)"""
     def get_list(self, auth_index):
         return self.score_list[auth_index]
 
@@ -60,6 +60,9 @@ class atm_similarity(object):
 
     def get_similarity(self, auth_index1, auth_index2):
         vector1 = self.get_list(auth_index1)
+        return self.get_similarity_vector_author(vector1, auth_index2)
+
+    def get_similarity_vector_author(self, vector1, auth_index2):
         vector2 = self.get_list(auth_index2)
 
         order = self.get_top_indexes(vector1)
@@ -89,6 +92,8 @@ class atm_similarity(object):
 
         return similarity
 
+    """This function is finds all the similarities of a given author index.
+        (can be reduced using get_all_similarities_vector)"""
     def get_all_similarities(self, auth_index1):
         sim_scores = []
         for auth_index2 in range(len(self.score_list)):
@@ -98,6 +103,18 @@ class atm_similarity(object):
                 sim_scores.append(self.get_similarity(auth_index1, auth_index2))
         return sim_scores
 
+    """This function is finds all the similarities of a given vector"""
+    def get_all_similarities_vector(self, sim_vector):
+        sim_scores = []
+        for auth_index2 in range(len(self.score_list)):
+            if auth_index2 == 8653:
+                sim_scores.append(0)
+            else:
+                sim_scores.append(self.get_similarity_vector_author(sim_vector, auth_index2))
+        return sim_scores
+
+    """This function is gives the top similarities and author indices(?) of a given author index.
+    (can be reduced using get_all_similarities_vector)"""
     def get_top_authors(self, auth_index):
         sim_scores = self.get_all_similarities(auth_index)
         top_authors = list(self.get_indexes_top_authors(sim_scores, self.X + 1))
@@ -106,6 +123,18 @@ class atm_similarity(object):
             top_scores.append(sim_scores[author])
 
         del top_scores[0], top_authors[0]
+
+        return top_authors, top_scores
+
+    """This function is gives the top similarities and author indices(?) of a given author top similarity"""
+    def get_top_authors_vector(self, sim_vector, exclude=[]):
+        sim_scores = self.get_all_similarities_vector(sim_vector)
+        for author_index in exclude:
+            sim_scores[author_index] = 0
+        top_authors = list(self.get_indexes_top_authors(sim_scores, self.X))
+        top_scores = []
+        for author in top_authors:
+            top_scores.append(sim_scores[author])
 
         return top_authors, top_scores
 
@@ -180,11 +209,10 @@ class atm_similarity(object):
 
         return fig
 
-with open('data_atm/score_list.pkl', 'rb') as f:
-    score_list = pickle.load(f)
-
-for x in range(10):
-    print(score_list[x])
+#with open('data_atm/score_list.pkl', 'rb') as f:
+#    score_list = pickle.load(f)
+#for x in range(10):
+#    print(score_list[x])
 
 
 # with open('data_atm/csvdata.csv', 'r') as f:
