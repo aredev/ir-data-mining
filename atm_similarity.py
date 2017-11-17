@@ -36,7 +36,7 @@ class atm_similarity:
         for x in range(len(sorted_list)):
             if vector[sorted_list[x]] >= 1:
                 order.append(sorted_list[x])
-
+        #print(len(sorted_list))
         return order
 
     def get_indexes_top_authors(self, sim_scores, amount):
@@ -49,7 +49,7 @@ class atm_similarity:
 
     """Returns the author topic vector for given an author index. (author_id is not the same as author index)"""
     def get_list(self, auth_index):
-        return self.score_list[auth_index]
+        return self.score_list[int(auth_index)]
 
     def get_weights(self, n):
         weights = []

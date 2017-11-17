@@ -3,24 +3,27 @@ from atm_similarity import atm_similarity
 import csv
 import numpy as np
 from indexer.database import db_handler as db
+from sklearn import preprocessing
+import matplotlib.pyplot as plt
 
 """This function creates author suggestions based on the authors of a paper."""
-def create_paper2author_sug():
+def create_paper2author_sug(filename="data_atm/paper_2_author_sug", type="max", normalize=False):
     paper_author_list = load_paper_authors()
     author_id_list = load_authors_id()
     authorsim = atm_similarity()
     result_list = []
-    for paper in [p for p in paper_author_list if len(p) > 2]:
+    for paper in paper_author_list[:20]: #[p for p in paper_author_list if len(p) > 2]:
         author_sim_list = []
         authors_of_paper = [author_id_list.index(a) for a in paper[1:]]  #might throw an error
         for author in authors_of_paper:
                 author_sim_list.append(authorsim.get_list(author))
-        average_vector = combine_vectors(author_sim_list)
+        average_vector = combine_vectors(author_sim_list, type=type, normalize=normalize)
         top_matches, _ = authorsim.get_top_authors_vector(average_vector) #, exclude=authors_of_paper)
         top_matches = [paper[0]] + [author_id_list[author_index] for author_index in top_matches]
+        #print(top_matches)
         result_list.append(top_matches)
     print(result_list)
-    save_rows_to_csv(result_list)
+    save_rows_to_csv(result_list, filename=filename)
 
 
 """This function loads all the papers with their authors to a list[paperd, [authorslist]]"""
@@ -79,6 +82,7 @@ def load_authors_id():
                 author_id_list.append(row[0])
     except EnvironmentError:
         print("Failed to open data/authors.csv")
+    author_id_list.append("UNKOWN")
     return author_id_list
 
 
@@ -91,28 +95,23 @@ def load_obj(filename):
         print("ERROR: Pickle " + filename + " could not be opened.")
     return None
 
-"""This function combines a list of vectors using the average. (Vectors must be the same size, and must contain at least
-    1 row) similar to numpy matrix.mean(0)"""
-def combine_vectors_average(vector_list):
-    average_vector = []
-    if len(vector_list) > 0:
-        v_length = len(vector_list[0])
-        for i in range(0, v_length):
-            average_vector.append(np.mean([row[i] for row in vector_list]))
-    return average_vector
-
 
 """Combines the vectors using max or mean"""
-def combine_vectors(vector_list, type="max"):
+def combine_vectors(vector_list, type="max", normalize=False):
     combined_vector = []
     if len(vector_list) > 0:
         v_length = len(vector_list[0])
+        if normalize:
+            vector_list = [(preprocessing.normalize(np.asarray(row).reshape(1, -1))*10000).flatten() for row in vector_list]
         for i in range(0, v_length):
+
             column = [row[i] for row in vector_list]
             if type is "max":
                 combined_vector.append(max(column))
             if type is "mean":
                 combined_vector.append(np.mean(column))
+            if type is "add":
+                combined_vector.append(sum(column))
     return combined_vector
 
 
@@ -151,16 +150,17 @@ def p2a_suggestions_ratio(filename):
     print("Median ratio of author found as suggestion: " + str(np.median(ratio)) + " Avg: " + str(np.mean(ratio)))
     return ratio
 
-def create_suggested_author_2_author():
+def create_suggested_author_2_author(top=10):
     author_id_list = load_authors_id()
-    authorsim = atm_similarity()
+    authorsim = atm_similarity(n_authors=top)
     suggestion_list = []
     for i, author in enumerate(author_id_list):
         top_matches, _ = authorsim.get_top_authors(i)
         top_matches = [author] + [author_id_list[author_index] for author_index in top_matches]
         suggestion_list.append(top_matches)
     print(suggestion_list)
-    save_rows_to_csv(suggestion_list, filename="data_atm/author_2_author_sug.csv")
+    save_rows_to_csv(suggestion_list, filename="data_atm/author_2_author_sug_top" + str(top) + ".csv")
+    save_rows_to_csv(suggestion_list, filename="data_atm/to_be_sure.csv")
 
 def create_author_to_paper_csv():
     author_id_list = load_authors_id()
@@ -204,56 +204,167 @@ def get_titles_of_authors(authors):
     return result_list
 
 """"This function gives the part of authors that cooperated with author_1"""
-def cooperation_ratio(authors):
+def cooperation_ratio(authors, author_to_paper):
     if len(authors) < 2:
         return -1
-    author_to_paper = load_csv_rows("data_atm/papers_of_author.csv")
     cooperated = 0.0
     for author in authors[1:]:
         if did_authors_cooperate(authors[0], author, author_to_paper):
             cooperated += 1.0
     return cooperated/(len(authors)-1.0)
 
+
+"""This gives the cooperation ratio for all the suggestions"""
 def give_overall_coop_ratio():
     a2a_suggestions = load_csv_rows("data_atm/author_2_author_sug.csv")
+    author_to_paper = load_csv_rows("data_atm/papers_of_author.csv")
     total = []
+
     for row in a2a_suggestions:
-        coop_ratio = cooperation_ratio(row)
+        coop_ratio = cooperation_ratio(row, author_to_paper)
         if not coop_ratio is -1:
             total.append(coop_ratio)
     print("Mean cooperation ratio: " + str(np.mean(total)))
     print("Median cooperation ratio: " + str(np.median(total)))
 
-def average_distance_author_to_sug():
-    a2a_suggestions = load_csv_rows("data_atm/author_2_author_sug.csv")
+
+"""This give the cooperation ratio for every author (not just suggestions, it takes a lot of time)"""
+def give_complete_graph_coop_ratio():
+    authors = load_authors_id()[:-1]    # remove the UNKOWN author
+    author_to_paper = load_csv_rows("data_atm/papers_of_author.csv")
+    total = []
+    authors_length = len(authors)
+    for progress, author in enumerate(authors):
+        temp = authors
+        temp.remove(author)
+        temp = [author] + temp
+        coop_ratio = cooperation_ratio(temp, author_to_paper)
+        if not coop_ratio is -1:                # -1 only happens if the list only contains 1 or no authors
+            total.append(coop_ratio)
+            print("Progress: " + str(progress) + " / " + str(authors_length))
+    print("Mean cooperation ratio: " + str(np.mean(total)))
+    print("Median cooperation ratio: " + str(np.median(total)))
+    save_rows_to_csv(total, filename="data_atm/complete_graph_coop_ratio.csv")
+
+
+"""Gives the average distance of an list of suggestions, limit restrains the number of suggestions limit 0 is all"""
+def average_distance_author_to_sug(filename="data_atm/author_2_author_sug_top20.csv", limit=0):
+
+    a2a_suggestions = load_csv_rows(filename)
     path_dict = load_obj("data/path_dict.pkl")
     all_sug_distances = []
     nr_unconnected = 0
     total_sug = 0
     for sugs in a2a_suggestions:
+        if limit > 0:
+            sugs = sugs[:limit+1]
         for sug in sugs[1:]:
             try:
                 all_sug_distances.append(path_dict[sugs[0]][sug])
             except KeyError:
                 nr_unconnected += 1
-                print(str(sugs[0]) + " and " + sug + " are not connected.")
+                #print(str(sugs[0]) + " and " + sug + " are not connected.")
             total_sug += 1
+    disconnected_ratio = nr_unconnected/total_sug
+    mean = np.mean(all_sug_distances)
 
-    print("Ratio of disconnected suggestions: " + str(nr_unconnected/total_sug))
-    print("Mean distance: " + str(np.mean(all_sug_distances)))
+    print("Ratio of disconnected suggestions: " + str(disconnected_ratio))
+    print("Mean distance: " + str(mean))
     print("Median distance: " + str(np.median(all_sug_distances)))
+    return disconnected_ratio, mean
 
+
+"""Copy pasta this function calculates average distance between every author"""
+def average_distance_author_to_all():
+    path_dict = load_obj("data/path_dict.pkl")
+    authors = load_authors_id()[:-2]  # remove the UNKOWN author?
+    all_sug_distances = []
+    nr_unconnected = 0
+    total_sug = 0
+    for author in authors:
+        others = authors[:]
+        others.remove(author)
+        for sug in others:
+            try:
+                all_sug_distances.append(path_dict[author][sug])
+            except KeyError:
+                nr_unconnected += 1
+                #print(str(author) + " and " + sug + " are not connected.")
+            total_sug += 1
+    print("Ratio of disconnected authors: " + str(nr_unconnected / total_sug))
+    print("Mean distance between all authors: " + str(np.mean(all_sug_distances)))
+    print("Median distance between all authors: " + str(np.median(all_sug_distances)))
+
+
+"""This function computes the correlation between distance and similarity"""
+def distance_similarity_correlation():
+    path_dict = load_obj("data/path_dict.pkl")
+    authors = load_authors_id()[:-1]  # remove the UNKOWN author?
+    authorsim = atm_similarity()
+    all_distances = []
+    all_similarities = []
+    nr_unconnected = 0
+    total_sug = 0
+    for index1, author in enumerate(authors):
+        for index2, sug in enumerate(authors):
+            if sug != author:
+                try:
+                    all_distances.append(path_dict[author][sug])
+                    all_similarities.append(authorsim.get_similarity(index1, index2))
+                except KeyError:
+                    nr_unconnected += 1
+                total_sug += 1
+    print("Ratio of disconnected authors: " + str(nr_unconnected / total_sug))
+    print("Mean distance between all authors: " + str(np.mean(all_distances)))
+    print("Median distance between all authors: " + str(np.median(all_distances)))
+
+    plt.scatter(all_similarities, all_distances)
+    plt.ylabel('Distance')
+    plt.xlabel('Similarity')
+    plt.show()
+    plt.clf()
+
+
+def histogram_of_top_suggested_distance(nr_sug=10):
+    average_list = []
+    discon_ratio_list = []
+    for i in range(1, nr_sug+1):
+        discon_ratio, mean = average_distance_author_to_sug(limit=i)
+        discon_ratio_list.append(discon_ratio)
+        average_list.append(mean)
+    print(average_list)
+    plt.plot(range(1, len(average_list)+1), average_list, 'ro', color="red")
+
+    plt.ylabel('Distance')
+    plt.xlabel('Nr top suggestion')
+    plt.show()
+    plt.clf()
+
+    plt.plot(range(1, len(discon_ratio_list) + 1), discon_ratio_list, 'ro', color="blue")
+    plt.ylabel('Disconnected ratio')
+    plt.xlabel('Nr top suggestion')
+    plt.show()
+    plt.clf()
 
 if __name__ == "__main__":
     #get_titles_of_authors(["1"])
     #print(cooperation_ratio(["1", "971", "1730", "168", "901", "308"]))
     #give_overall_coop_ratio()
     #get_titles_of_authors(["1", "971", "1730", "168", "901", "308"])
-    average_distance_author_to_sug()
-    # get_title_of_paper("63")
-    # create_author_to_paper_csv()
-    # create_suggested_author_2_author()
-    # p2a_suggestions_ratio("data_atm/paper_2_author_sug_max_with_small.csv")
-    # p2a_suggestions_ratio("data_atm/paper_2_author_sug_max.csv")
-    #p2a_suggestions_ratio("data_atm/paper_2_author_sug_avg.csv")
+    #average_distance_author_to_sug()
+    #create_author_to_paper_csv()
+
+    #create_suggested_author_2_author(top=20)
+
+    #p2a_suggestions_ratio("data_atm/paper_2_author_sug_max_with_small.csv")
+    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_add4.csv", type="add")
+    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_add_normal5.csv", type="add", normalize=True)
+
+    distance_similarity_correlation()
+
+    #histogram_of_top_suggested_distance(nr_sug=20)
+    #average_distance_author_to_all()
+    #give_complete_graph_coop_ratio()
+
+    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_add_normal.csv", type="add", normalize=True)
     # create_paper2author_sug()
