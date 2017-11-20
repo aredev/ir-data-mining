@@ -3,7 +3,7 @@ retrieval of references in the papers.
 
 INPUT:
  * NIPS database. By default the scripts assume that it is located in
-   '../data/dataabase.sqlite'.
+   '../data/database.sqlite'.
 
 OUTPUT:
  * ../data/references.sqlite: If it doesn't exist, it is created.
