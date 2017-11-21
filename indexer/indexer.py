@@ -10,7 +10,7 @@ from tqdm import tqdm
 from whoosh.analysis import LowercaseFilter, StopFilter
 from whoosh.fields import Schema, TEXT, ID, STORED, DATETIME
 from whoosh.index import create_in, exists_in, open_dir
-from whoosh.qparser import QueryParser
+from whoosh.qparser import QueryParser, MultifieldParser
 
 from indexer.database.db_handler import DbHandler
 from indexer.filters.punctuation import PunctuationFilter
@@ -135,27 +135,37 @@ class Indexer(object):
             'score': score
         }
 
-    def search(self, query_string, field="content"):
+    def multifield_search(self, query_dict):
         """
-        Search using a given query
-        :param field:
-        :param query: a query
+        :param query_dict: a dict with keys for fields, values for sub queries
         :return:
         """
+        field_weights = {
+            'title': 10,
+            'authors': 5,
+            'pub_date': 2,
+            'content': 1
+        }
         with self.ix.searcher() as searcher:
-            # Perform some spellchecking
-            parser = QueryParser(field, self.ix.schema)
-            query = parser.parse(query_string)
+            parser = MultifieldParser(field_weights.keys(), self.ix.schema, field_weights)
+            sep = ''
+            query = ''
+            for key, val in query_dict.items():
+                if val != '':
+                    if key == 'content_title':
+                        query += sep + "(title:({}) OR content:({}))".format(val, val)
+                    elif key == 'authors':
+                        query += sep + "(authors:({})".format(val)
+                    elif key == 'pub_date':
+                        query += sep + "(pub_date:({})".format(val)
+                    sep = ' AND '
 
-            corrected = searcher.correct_query(query, query_string)
-            if corrected.query != query:
+            parsed_query = parser.parse(query)
+            corrected = searcher.correct_query(parsed_query, query)
+            if corrected.query != parsed_query:
                 print("Did you mean: " + str(corrected.string) + " ?")
 
-            all_terms = list(self.ix.reader().all_terms())
-            print("Number of terms in the vocabulary: {}".format(len(all_terms)))
-            print("Query: " + str(query))
-            results = searcher.search(query, limit=None)
-            print("Number of results: " + str(len(results)))
+            results = searcher.search(parsed_query)
             results_in_dict = []
             if len(results) > 0:
                 for idx, r in enumerate(results):

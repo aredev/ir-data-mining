@@ -27,51 +27,26 @@ def search(request):
     query = request.POST.get('q')
     author = request.POST.get('author')
     years = request.POST.get('year')
-    year_from = years.split(',')[0]
-    year_to = years.split(',')[1]
 
-    title_results = []  # list
-    body_results = []
-    year_results = []  # nested list
-    author_results = []  # nested_list
+    search_dict = {}
+    if query is not None:
+        search_dict['content_title'] = query
+    if author is not None:
+        search_dict['authors'] = author
+    if years is not None:
+        year_from = years.split(',')[0]
+        year_to = years.split(',')[1]
+        search_dict['pub_date'] = "[" + year_from + " TO " + year_to + "]"
+    print(search_dict)
 
-    title_results.extend(m.indexer.search(query, 'title'))
-    body_results.extend(m.indexer.search(query, 'content'))
-    year_results.append(m.indexer.search("[" + year_from + " TO " + year_to + "]", 'pub_date'))
-    author_results.append(m.indexer.search(author, 'authors'))
-
-    need_to_intersect_year_author = len(year_results) > 0 and len(author_results) > 0
-    year_author_results = []
-    if need_to_intersect_year_author:
-        year_author_results = combine_author_year_results(author_results[0], year_results[0])
-    elif len(year_results) > 0:
-        year_author_results = year_results[0]
-    elif len(author_results) > 0:
-        year_author_results = author_results[0]
-
-    results = combine_title_body_results(title_results, body_results, t=2.0)
-
-    # intersect with year results if it contains hits
-    if len(results) > 0 and len(year_author_results) > 0:
-        results = combine_with_year_results(results, year_author_results)
-    elif len(year_author_results) > 0:
-        results = year_author_results
-
+    results = m.indexer.multifield_search(search_dict)
     results = assign_pagerank(results, m)
-
     results = sorted(results, key=(lambda k: k['score']), reverse=True)[:10]
 
     end_time = datetime.datetime.now()
     computation_time = (end_time - start_time).seconds
 
     papers = []
-    # results = m.indexer.search(query)
-    # author_results = m.indexer.search(author, 'authors')
-    # print(year_from)
-    # year_results = m.indexer.search("[" + year_from + " TO " + year_to + "]", 'pub_date')
-    #
-    # print(year_results)
-
     for result in results:
         papers.append(Paper.objects.get(id=result['docId']))
 
