@@ -69,10 +69,9 @@ class atm_similarity:
 
         vector1_adapted = []
         vector2_adapted = []
-
-        for x in range(len(order)):
-            vector1_adapted.append(vector1[order[x]])
-            vector2_adapted.append(vector2[order[x]])
+        for x in order:
+            vector1_adapted.append(vector1[x])
+            vector2_adapted.append(vector2[x])
 
         weights = self.get_weights(len(order))
 
