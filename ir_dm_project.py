@@ -2,10 +2,12 @@
 # from ir_model import IRModel
 # from data.bart_migration import BartMigration
 # from data.bart_migration import BartMigration
-# from data.frans_migration import FransMigration
+from data.frans_migration import FransMigration
 # from db_handler import DbHandler
 from data.bart_migration import BartMigration
 from data.matthias_migration import MatthiasMigration
+from data.ylja_migration import YljaMigration
+from db_handler import DbHandler
 from indexer.indexer import Indexer
 
 
@@ -18,8 +20,9 @@ def main():
     # IRModel()
 
     # DbHandler().create_tables()
-    BartMigration().migrate_from_csv()
-    # FransMigration().parse_from_csv()
+    # BartMigration().migrate_from_csv()
+    FransMigration().update_abstracts()
+    # YljaMigration().generate_topics()
     # MatthiasMigration().parse_from_csv()
 
 

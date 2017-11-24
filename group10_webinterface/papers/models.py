@@ -77,6 +77,7 @@ class PaperTopic(models.Model):
     id = models.IntegerField(blank=True, primary_key=True)
     paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='topics_for')
+    probability = models.FloatField()
 
     class Meta:
         managed = False
