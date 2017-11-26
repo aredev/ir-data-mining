@@ -27,7 +27,7 @@ This is our project for the course Information Retrieval and Data Mining given a
     * Install nltk using PyPi (`pip install nltk`)
     * Ignore any messages from PyCharm stating that the requirement (nltk >= 3.2.5) is not fulfilled.
 
-* November 26th: Download the latest sqlite database from [here](https://mega.nz/#!JaZwlapR!ykH23jX7HCfOqvJbQrJo3Py69DvtyurX7lDHqp6ewCI), with more abstracts than ever.
+* November 26th: Download the latest sqlite database from [here](https://mega.nz/#!gSoEHRLS!2z9tE647Oi0AOmfEsM62-fChY7ei1BlTiNVyunyAVZ8), with more abstracts than ever and manually added some authors to papers.
 
 ~~* November 24th: Download the latest sqlite database from [here](https://mega.nz/#!hWBCia5C!Ml6Y4pX1IcPvl3v_mBk2QW48gK2j5Zk2YuuYNASQ49Q) including topics and new paper suggestions.~~
 
