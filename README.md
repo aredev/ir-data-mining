@@ -29,11 +29,11 @@ This is our project for the course Information Retrieval and Data Mining given a
 
 * November 26th: Download the latest sqlite database from [here](https://mega.nz/#!gSoEHRLS!2z9tE647Oi0AOmfEsM62-fChY7ei1BlTiNVyunyAVZ8), with more abstracts than ever and manually added some authors to papers.
 
-~~* November 24th: Download the latest sqlite database from [here](https://mega.nz/#!hWBCia5C!Ml6Y4pX1IcPvl3v_mBk2QW48gK2j5Zk2YuuYNASQ49Q) including topics and new paper suggestions.~~
+* ~~November 24th: Download the latest sqlite database from [here](https://mega.nz/#!hWBCia5C!Ml6Y4pX1IcPvl3v_mBk2QW48gK2j5Zk2YuuYNASQ49Q) including topics and new paper suggestions.~~
 
-~~* November 16th: Download the latest sqlite database from [here](https://mega.nz/#!8PASFDyL!zPVhfNUf2x22b6meYRDqJj97bDmFc_D7JyKE8fyOsyc) with updated author suggestions from Bart and paper to author suggestions by Matthias.~~
+* ~~November 16th: Download the latest sqlite database from [here](https://mega.nz/#!8PASFDyL!zPVhfNUf2x22b6meYRDqJj97bDmFc_D7JyKE8fyOsyc) with updated author suggestions from Bart and paper to author suggestions by Matthias.~~
 
-~~* November 13th: Download the latest sqlite database from [here](https://mega.nz/#!IeRASSqZ!f4t4pV3xFTMyIanh8hMCEJlfQyi5w1x_JqtspZqwZW4). This version contains the references, authors, author graph. No topics yet, some abstracts may be missing.~~
+* ~~November 13th: Download the latest sqlite database from [here](https://mega.nz/#!IeRASSqZ!f4t4pV3xFTMyIanh8hMCEJlfQyi5w1x_JqtspZqwZW4). This version contains the references, authors, author graph. No topics yet, some abstracts may be missing.~~
 
 * If you encounter the module not found exception for a local module and you are using PyCharm, then mark the corresponding directory as source. For example if PyCharm mentions that the tokenizers.stanford module is not found, then mark the indexer folder (where stanford is a child of tokenizers in indexer) as a source.
 This can be done by going to File > Settings > Project Structure > indexer > Mark as source in the top of the pop up window.
