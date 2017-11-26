@@ -18,8 +18,10 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^paper/', include('group10_webinterface.papers.paper_urls')),
     url(r'^papers/', include('group10_webinterface.papers.urls')),
     url(r'^author/', include('group10_webinterface.papers.author_urls')),
-    url(r'^topic/', include('group10_webinterface.papers.topic_urls'))
+    url(r'^topic/', include('group10_webinterface.papers.topic_urls')),
+    url(r'^year/', include('group10_webinterface.papers.year_urls')),
 
 ]

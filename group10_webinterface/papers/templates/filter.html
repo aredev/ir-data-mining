@@ -1,0 +1,36 @@
+<div class="sidebar">
+    <div class="widget js-widget widget--sidebar">
+        <div class="widget__header">
+            <h2 class="widget__title">Filter</h2>
+            <h5 class="widget__headline">Adjust your query further to find your paper.</h5><a class="widget__btn js-widget-btn widget__btn--toggle">Show filter</a>
+        </div>
+        <div class="widget__content">
+            <!-- BEGIN SEARCH-->
+            <form action="/papers/search" method="post" class="form form--flex form--search js-search-form form--sidebar">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="form-group">
+                        <label class="control-label" for="q">Keyword</label> <input class="form-control" id="q" name="q" placeholder="Keywords" type="text" value="{{query.q}}" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" for="Author">Authors</label> <input class="form-control" id="Author" name="author" placeholder="Authors" type="text" value="{{query.author}}" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" for="year">Published between</label><br>
+                        <input class="range-slider" name="year" style="color: black;" type="hidden" value="{{query.year}}">
+                    </div>
+                    <div class="form__buttons form__buttons--double">
+                        <button class="form__submit" type="submit">Search</button>
+                    </div>
+                </div>
+            </form><!-- end of block-->
+            <!-- END SEARCH-->
+        </div>
+    </div>
+</div><!-- END SIDEBAR-->
+
+<style>
+    .theme-green .back-bar .pointer-label {
+        color: black;
+    }
+</style>

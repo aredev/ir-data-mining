@@ -53,7 +53,7 @@ def search(request):
     previous_query = {
         'q': query,
         'author': author,
-        'years': years
+        'year': years
     }
 
     return render(request, 'results.html', {
@@ -127,15 +127,26 @@ CRUDS PER MODEL
 """
 
 
-def getAuthorById(request, author_id):
+def get_author_by_id(request, author_id):
     author = Author.objects.get(id=author_id)
-    return render(request, 'author.html', {'author': author})
+    return render(request, 'author.html', {'author': author, 'query': {'author': author.name}})
 
 
-def getTopicById(request, topic_id):
+def get_topic_by_id(request, topic_id):
     topic = Topic.objects.get(id=topic_id)
     return render(request, 'topic.html', {'topic': topic})
 
-def getPaperById(request, paper_id):
+
+def get_paper_by_id(request, paper_id):
     paper = Paper.objects.get(id=paper_id)
-    return render(request, 'paper.html', {'paper': paper})
+
+    return render(request, 'paper_detail.html', {'paper': paper,
+                                                 'query': {'q': paper.title,
+                                                           'year': str(paper.year) + "," + str(paper.year)
+                                                           }
+                                                 })
+
+
+def get_paper_by_year(request, year):
+    papers = Paper.objects.filter(year=year)
+    return render(request, 'year.html', {'papers': papers, 'year': year, 'query': {'year': year + "," + year}})

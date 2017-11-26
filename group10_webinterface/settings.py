@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'group10_webinterface.papers'
+    'group10_webinterface.papers',
+    'django.contrib.humanize'
 ]
 
 MIDDLEWARE = [

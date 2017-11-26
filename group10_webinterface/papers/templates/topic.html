@@ -2,12 +2,7 @@
 
 {% block header %}
 
-<h1 class="property__title">{{topic.name}}</h1>
-<div class="property__header">
-    <div class="property__actions">
-        <button class="btn--default" type="button"><i class="fa fa-refresh"></i>Update status</button> <button class="btn--default" type="button"><i class="fa fa-star"></i>Add to favorites</button>
-    </div>
-</div>
+<h1 class="property__title">Topic: {{topic.name}}</h1>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css">
 
@@ -35,10 +30,38 @@
 
 {% block details %}
 
-    {% for paper in topic.topics_for.all %}
+    <table class="table" style="width:100%" id="papers">
+            <thead>
+                <tr>
+                    <th>Authors</th>
+                    <th>Title</th>
+                    <th>Year</th>
+                    <th>Download</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for paper in topic.topics_for.all %}
+                <tr>
+                    <td>
+                        {% for author in paper.paper.authors.all %}
+                            <a href="/author/{{author.id}}">
+                                <span class="properties__address-city">{{author.name}}</span>
+                            </a>
+                        {% endfor %}
+                    </td>
+                    <td><a href="/paper/{{paper.paper.id}}">{{paper.paper.title}}</a></td>
+                    <td><a href="/year/{{paper.paper.year}}">{{paper.paper.year}}</a></td>
+                    <td><a href="http://papers.nips.cc/paper/{{paper.paper.pdf_name}}">Click here</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
 
-        {{paper.paper.title}}
-
-    {% endfor %}
+<script>
+    $(document).ready(function(){
+        $('#papers').DataTable();
+    });
+</script>
 
 {% endblock %}
+
