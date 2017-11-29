@@ -8,7 +8,6 @@ from data.bart_migration import BartMigration
 from data.matthias_migration import MatthiasMigration
 from data.ylja_migration import YljaMigration
 from db_handler import DbHandler
->>>>>>> 530e5e7e73f444fbceb4d1719b3cc63854f3df12
 from indexer.indexer import Indexer
 from topics.lda import LDA
 
