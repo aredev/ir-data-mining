@@ -158,6 +158,11 @@ class DbHandler(object):
         authors = self.conn.execute(query).fetchall()
         return [str(author[0]) for author in authors]
 
+    def get_title_by_paper_id(self, paper_id):
+        query = "SELECT title FROM papers WHERE id == " + paper_id
+        title = self.conn.execute(query).fetchone()
+        return title
+
     def get_author_by_id(self, author_id):
         query = "SELECT name FROM authors WHERE id == " + str(author_id)
         return self.conn.execute(query).fetchone()[0]

@@ -1,55 +1,102 @@
 import warnings
-
 warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 
 import gensim
-from nltk.stem import WordNetLemmatizer
-from indexer.database.db_handler import DbHandler
+from gensim import utils
+from indexer.indexer import Indexer
+import json
+import logging
+
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
 class LDA(object):
-    # corpus = gensim.corpora.MalletCorpus('nips.mallet')
-    # print ('corpus done')
-    # #Build a model
-    # model = gensim.models.LdaModel(corpus, id2word=corpus.id2word, alpha='auto', num_topics=25)
-    # model.save('nips.lda')
-    #
-    # model = gensim.models.LdaModel.load('nips.lda')
-    # print(model.show_topics())
 
-    def __init__(self) -> None:
-        self.docIds = []
-        self.path = "data/lda"
-        self.db_handler = DbHandler()
-        self.corpus = gensim.corpora.MalletCorpus(self.path + '/nips.corpus')
-        self.lda_model = gensim.models.LdaModel.load(self.path + '/nips.lda')
-        self.lemmatizer = WordNetLemmatizer()
+    def prepDataAndRun(self):
+        indexer = Indexer()
+        voca = indexer.get_voca()
+        id2word = {}
+        word2id = {}
+        l = []
+        for x in range(len(voca)):
+            voca[x] = list(voca[x])
+            if voca[x][0] == "content":
+                term = voca[x][1].decode("utf-8")
+                word2id[term] = x
+                id2word[x] = term
+                l.append(term)
+        voca = l
 
-    def get_topics_for_document(self, docId, nr_topics=3, nr_topic_words=5):
-        document_topics = self.lda_model.get_document_topics(
-            self.corpus[DbHandler.get_instance().get_index_for_docid(docId)])
-        topics_by_id = sorted(document_topics, key=lambda tup: tup[1], reverse=True)
-        topic_results = []
+        fp = open('bowcorpus.json', 'r')
+        corpus = json.load(fp)
+        bows = [bow for (id, bow) in corpus]
+        idbows = []
 
-        # Show the the top <nr_topic_words> words of the best <nr_topics> topics.
-        nr_topics = min([nr_topics, len(topics_by_id)])
+        for bow in bows:
+            idbow = [(word2id[word], freq) for word, freq in bow]
+            idbows.append(idbow)
+        LDA.build_lda_model(idbows, id2word)
 
-        for (topic_id, _) in topics_by_id[:nr_topics]:
-            top_words = self.lda_model.show_topic(topic_id)
-            max_topics = min([nr_topic_words, len(top_words)])
-            top_words = [self.lemmatizer.lemmatize(word) for (word, _) in top_words[:max_topics]]
-            top_words = list(set(top_words))  # remove the duplicates within a topic
-            topic_results.append(top_words)
-        return topic_results
+    def build_lda_model(corpus, id2word):
+        # gensim.corpora.Dictionary.from_corpus(corpus)
+        gensim.corpora.MmCorpus.serialize('nips.mm', corpus, id2word=id2word)
+        corpus = gensim.corpora.MmCorpus('nips.mm')
 
-    def build_lda_model(self, filename='nips.mallet'):
-        corpus = gensim.corpora.MalletCorpus(filename)
-        corpus.serialize('nips.corpus', corpus)
 
-        dictionary = gensim.corpora.Dictionary.from_corpus(corpus)
+        dictionary = gensim.corpora.Dictionary.from_corpus(corpus, id2word)
         dictionary.save('nips.dict')
 
-        dictionary.filter_extremes(no_below=25, no_above=0.7)
-        # Build a model
-        model = gensim.models.LdaModel(corpus, id2word=corpus.id2word, alpha='auto', num_topics=50, passes=15)
-        model.save('nips.lda')
+        filterdict = gensim.corpora.Dictionary.load('nips.dict')
+        filterdict.filter_extremes(10, 0.5)
+        filterdict.save('nipsFilter10.dict')
+        old2new = {dictionary.token2id[token]: new_id for new_id, token in filterdict.iteritems()}
+        vt = gensim.models.VocabTransform(old2new)
+        gensim.corpora.MmCorpus.serialize('filtered_nips.mm', vt[corpus], id2word=filterdict)
+        filtercorpus = gensim.corpora.MmCorpus('filtered_nips.mm')
+
+        model = gensim.models.LdaModel(filtercorpus, id2word=filterdict, alpha='auto', num_topics=20, passes=10)
+        model.save('ldaFilter10.lda')
+
+        filterdict2 = gensim.corpora.Dictionary.load('nips.dict')
+        filterdict2.filter_extremes(50, 0.5)
+        filterdict.save('nipsFilter50.dict')
+        old2new = {dictionary.token2id[token]: new_id for new_id, token in filterdict2.iteritems()}
+        vt = gensim.models.VocabTransform(old2new)
+        gensim.corpora.MmCorpus.serialize('filtered_nips2.mm', vt[corpus], id2word=filterdict)
+        filtercorpus2 = gensim.corpora.MmCorpus('filtered_nips2.mm')
+
+        model = gensim.models.LdaModel(filtercorpus2, id2word=filterdict2, alpha='auto', num_topics=20, passes=10)
+        model.save('ldaFilter50.lda')
+
+
+    def build_dtm_model(self):
+        """
+        Method using DtmModel in gensim
+        :return:
+        """
+
+        corpus = gensim.corpora.MalletCorpus('nips.mallet')
+
+        time_slices = [90, 93, 101, 127, 140, 143, 144, 150, 150, 151, 152, 152, 152, 158, 197, 198, 204, 207, 207, 207,
+                       217, 250, 262, 292, 306, 360, 368, 403, 411, 567]
+
+        ldaseq = gensim.models.LdaSeqModel(corpus=corpus, time_slice=time_slices, num_topics=15)
+        ldaseq.save('nips.dtm')
+
+
+    def generate_dtm(self):
+        """
+        Method for DTM using the C++ wrapper
+        :return:
+        """
+        corpus = gensim.corpora.MalletCorpus('nips.mallet')
+
+        # This .exe file contains a memory leak, try the one in libs/no-leak, only runnable on linux
+        time_slices = [90, 93, 101, 127, 140, 143, 144, 150, 150, 151, 152, 152, 152, 158, 197, 198, 204, 207, 207, 207,
+                       217, 250, 262, 292, 306, 360, 368, 403, 411, 567]
+
+        model = gensim.models.wrappers.DtmModel('libs/dtm-win64.exe', corpus, time_slices=time_slices,
+                                                num_topics=15, initialize_lda=True, id2word=corpus.id2word)
+        topics = model.show_topics(num_topics=3, times=1, formatted=True)
+        print(topics)
+        model.save('nips.dtm')

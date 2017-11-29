@@ -4,15 +4,14 @@
 # from data.bart_migration import BartMigration
 # from data.frans_migration import FransMigration
 # from db_handler import DbHandler
+import json
+
 from indexer.indexer import Indexer
+from topics.lda import LDA
 
 
 def main():
     print("Use django to launch project using: \'python.exe manage.py runserver\'")
-
-    indexer = Indexer()
-    indexer.search("neural")
-
     # IRModel()
 
     # DbHandler().create_tables()

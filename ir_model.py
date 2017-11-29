@@ -5,7 +5,7 @@ from db_handler import DbHandler
 from indexer.indexer import Indexer
 from scores.ScoreFunction import ReputationScores
 # Singleton class that holds the instantiations that are needed during execution of the queries.
-from topics.lda import LDA
+from topics.lda_old import LDA
 
 
 class IRModel:

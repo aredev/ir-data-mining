@@ -212,16 +212,17 @@ class Indexer(object):
             """
             a += 1
             print(a)
-            doc_id = self.get_docId(doc_num)
+            doc_id = str(self.get_docId(doc_num))
             try:
                 v = self.ix.reader().vector(doc_num, "content")
                 # Convert to a list of (word, frequency) tuples
-                v_items = list(v.items_as("frequency"))
+                v_items = tuple(v.items_as("frequency"))
             except:
                 v_items = []
                 print("NO VECTOR")
 
-            v_list.append([doc_id, v_items])
+            v_list.append((doc_id, v_items))
+            i = 0
         return v_list
 
     def get_voca(self):
@@ -233,6 +234,6 @@ class Indexer(object):
 
         fields = self.ix.reader().stored_fields(doc_num)
 
-        docId = fields["docId"]
+        docId = fields["doc_id"]
 
         return docId
