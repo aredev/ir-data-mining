@@ -4,12 +4,7 @@
 
     <h1 class="property__title">{{paper.title}}</h1>
     <div class="property__header">
-        <div class="property__price">
-            <strong class="property__price-value">{{author.score}}</strong><span class="property__price-label">Score</span>
-        </div>
-        <div class="property__actions">
-            <button class="btn--default" type="button"><i class="fa fa-refresh"></i>Update status</button> <button class="btn--default" type="button"><i class="fa fa-star"></i>Add to favorites</button>
-        </div>
+        Authors: {{paper.authors.all}}
     </div>
 
 {% endblock %}
@@ -26,21 +21,21 @@
 <div class="tab-content">
   <div id="home" class="tab-pane fade in active">
 
-      {% for reference in paper.references.all %}
+      <!--{% for reference in paper.references.all %}-->
 
-            {{ reference.reference_paper.title }}
+            <!--{{ reference.reference_paper.title }}-->
 
-      {% endfor %}
+      <!--{% endfor %}-->
 
 
   </div>
   <div id="menu1" class="tab-pane fade">
 
-      {% for paper in paper.referenced_by.all %}
+      <!--{% for paper in paper.referenced_by.all %}-->
 
-        {{paper.paper.title}}
+        <!--{{paper.paper.title}}-->
 
-      {% endfor %}
+      <!--{% endfor %}-->
 
   </div>
   <div id="menu2" class="tab-pane fade">

@@ -17893,14 +17893,13 @@ fieldset[disabled] .dropdown--select .dropdown-toggle {
 
 .properties__ribon {
   position: absolute;
-  top: 110px;
-  right: -5px;
+  bottom: -40px;
+  left: 15px;
   background: #00bbaa;
   color: #fff;
   text-transform: uppercase;
   padding: 3px 15px;
   font-weight: 600;
-  top: 18px;
 }
 
 .properties__ribon:after {

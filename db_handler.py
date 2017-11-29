@@ -67,6 +67,7 @@ class DbHandler(object):
             `id` integer PRIMARY KEY,
             `paper_id` integer NOT NULL,
             `topic_id` integer NOT NULL,
+            `probability` FLOAT NOT NULL,
             
             CONSTRAINT paper_topic_unique UNIQUE(paper_id, topic_id)
         );
@@ -134,6 +135,7 @@ class DbHandler(object):
         """
 
         self.cursor.execute(add_new_author_table)
+
 
         # add_column_to_suggested = """
         # ALTER TABLE `suggested_authors` ADD COLUMN `score` FLOAT;

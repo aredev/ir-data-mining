@@ -3,13 +3,22 @@
 {% block header %}
 
 <h1 class="property__title">{{author.name}}</h1>
-<div class="property__header">
-    <div class="property__price">
-        <strong class="property__price-value">{{author.score}}</strong><span class="property__price-label">Score</span>
-    </div>
-    <div class="property__actions">
-        <button class="btn--default" type="button"><i class="fa fa-refresh"></i>Update status</button> <button class="btn--default" type="button"><i class="fa fa-star"></i>Add to favorites</button>
-    </div>
+
+<div class="property__plan">
+    <dl class="property__plan-item">
+        <dt class="property__plan-icon">
+           <i class="fa fa-file-text" aria-hidden="true"></i>
+        </dt>
+        <dd class="property__plan-title">Pagerank</dd>
+        <dd class="property__plan-value">{{author.pagerank}}</dd>
+    </dl>
+    <dl class="property__plan-item">
+        <dt class="property__plan-icon">
+            <i class="fa fa-header" aria-hidden="true"></i>
+        </dt>
+        <dd class="property__plan-title">H-index</dd>
+        <dd class="property__plan-value">{{author.h_index}}</dd>
+    </dl>
 </div>
 
 {% endblock %}
@@ -34,9 +43,26 @@
 
 <div class="tab-content">
     <div id="home" class="tab-pane fade in active">
-        {% for publication in author.papers.all %}
-        {{publication.title}}
-        {% endfor %}
+        <table class="table" style="width:100%" id="publications">
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Year</th>
+                <th>More info</th>
+                <th>Download</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for publication in author.papers.all %}
+            <tr>
+                <td><a href="/paper/{{publication.id}}">{{publication.title}}</a></td>
+                <td><a href="/year/{{publication.year}}">{{publication.year}}</a></td>
+                <td><a href="/paper/{{publication.id}}">Click here</a></td>
+                <td>Click here</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
     <div id="menu1" class="tab-pane fade">
         <div id="mynetwork"></div>
@@ -48,16 +74,19 @@
 <script type="text/javascript">
     // create an array with nodes
     var nodes = new vis.DataSet([
-        {id: 1, label: '{{author.name}}'},
+        {id: 0, label: '{{author.name}}'},
         {% for sa in author.suggested_authors.all %}
             {id: {{sa.suggested_author.id}}, label: '{{sa.suggested_author.name}}'},
         {% endfor %}
     ]);
 
+    {% load humanize %}
+
+
     // create an array with edges
     var edges = new vis.DataSet([
         {% for sa in author.suggested_authors.all %}
-            {from: 1, to: {{sa.suggested_author.id}}},
+            {from: 0, to: {{sa.suggested_author.id}}, label: '{{sa.similarity|floatformat:4}}' },
         {% endfor %}
     ]);
 
@@ -73,6 +102,11 @@
 
     // initialize your network!
     var network = new vis.Network(container, data, options);
+
+    $(document).ready(function(){
+        $('#publications').DataTable();
+    });
+
 </script>
 
 {% endblock %}

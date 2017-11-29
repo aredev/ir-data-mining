@@ -1,0 +1,103 @@
+{% extends 'detailpage.html' %}
+
+{% block header %}
+
+<h1 class="property__title">{{paper.title}} (<a href="/year/{{paper.year}}">{{paper.year}}</a>)</h1>
+<div class="property__info-item">
+    {% for author in paper.authors.all %}
+        <a href="/author/{{author.id}}">{{author.name}}</a>
+    {% endfor %}
+</div>
+
+<a href="http://papers.nips.cc/paper/{{paper.pdf_name}}">
+    <button>
+        <i class="fa fa-cloud-download fa-2x" aria-hidden="true"></i>
+        Download
+    </button>
+</a>
+
+
+{% endblock %}
+
+{% block details %}
+
+<ul class="nav nav-tabs">
+    <li class="active"><a data-toggle="tab" href="#references">References</a></li>
+    <li><a data-toggle="tab" href="#referencedBy">Referenced By</a></li>
+    <li><a data-toggle="tab" href="#similarAuthors">Suggested authors</a></li>
+    <li><a data-toggle="tab" href="#similarPapers">Similar papers</a></li>
+</ul>
+
+<div class="tab-content">
+    <div id="references" class="tab-pane fade in active">
+        <table class="table" style="width:100%" id="refTable">
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Year</th>
+                <th>Download</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for reference in paper.references.all %}
+            <tr>
+                <td><a href="/paper/{{reference.reference_paper.id}}">{{reference.reference_paper.title}}</a></td>
+                <td><a href="/year/{{reference.reference_paper.year}}">{{reference.reference_paper.year}}</a></td>
+                <td><a href="http://papers.nips.cc/paper/{{reference.reference_paper.pdf_name}}">Download</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="referencedBy" class="tab-pane fade">
+        <table class="table" style="width:100%" id="refByTable">
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Year</th>
+                <th>Download</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for reference in paper.referenced_by.all %}
+            <tr>
+                <td><a href="/paper/{{reference.paper.id}}">{{reference.paper.title}}</a></td>
+                <td><a href="/year/{{reference.paper.year}}">{{reference.paper.year}}</a></td>
+                <td><a href="http://papers.nips.cc/paper/{{reference.paper.pdf_name}}">Download</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="similarAuthors" class="tab-pane fade">
+        <table class="table" style="width:100%" id="simAuthors">
+            <thead>
+            <tr>
+                <th>Name</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for author in paper.similar_authors.all %}
+            <tr>
+                <td><a href="/author/{{author.author.id}}">{{author.author.name}}</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="similarPapers" class="tab-pane fade">
+        Coming soon!
+    </div>
+</div>
+
+<script>
+    $(document).ready(function(){
+        $("#refTable").dataTable();
+
+        $("#refByTable").dataTable();
+
+        $("#simAuthors").dataTable();
+    })
+</script>
+
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'detailpage.html' %}
+
+{% block header %}
+
+<h1 class="property__title">Papers published in {{year}}</h1>
+
+{% endblock %}
+
+{% block details %}
+
+    <table class="table" style="width:100%" id="papers">
+            <thead>
+                <tr>
+                    <th>Authors</th>
+                    <th>Title</th>
+                    <th>Download</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for paper in papers %}
+                <tr>
+                    <td>
+                        <ul>
+                        {% for author in paper.authors.all %}
+                            <li>
+                                <a href="/author/{{author.id}}">
+                                    <span class="properties__address-city">{{author.name}}</span>
+                                </a>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                    <td><a href="/paper/{{paper.id}}">{{paper.title}}</a></td>
+                    <td><a href="http://papers.nips.cc/paper/{{paper.pdf_name}}">Download here</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+<script>
+    $(document).ready(function(){
+        $('#papers').DataTable();
+    });
+</script>
+
+{% endblock %}
+

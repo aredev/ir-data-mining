@@ -2,21 +2,30 @@
 # from ir_model import IRModel
 # from data.bart_migration import BartMigration
 # from data.bart_migration import BartMigration
-# from data.frans_migration import FransMigration
+from data.frans_migration import FransMigration
 # from db_handler import DbHandler
-import json
-
+from data.bart_migration import BartMigration
+from data.matthias_migration import MatthiasMigration
+from data.ylja_migration import YljaMigration
+from db_handler import DbHandler
+>>>>>>> 530e5e7e73f444fbceb4d1719b3cc63854f3df12
 from indexer.indexer import Indexer
 from topics.lda import LDA
 
 
 def main():
     print("Use django to launch project using: \'python.exe manage.py runserver\'")
+
+    # indexer = Indexer()
+    # indexer.search("neural")
+
     # IRModel()
 
     # DbHandler().create_tables()
     # BartMigration().migrate_from_csv()
-    # FransMigration().parse_from_csv()
+    FransMigration().update_abstracts()
+    # YljaMigration().generate_topics()
+    # MatthiasMigration().parse_from_csv()
 
 
 if __name__ == "__main__":
