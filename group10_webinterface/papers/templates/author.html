@@ -48,7 +48,6 @@
             <tr>
                 <th>Title</th>
                 <th>Year</th>
-                <th>More info</th>
                 <th>Download</th>
             </tr>
             </thead>
@@ -57,8 +56,7 @@
             <tr>
                 <td><a href="/paper/{{publication.id}}">{{publication.title}}</a></td>
                 <td><a href="/year/{{publication.year}}">{{publication.year}}</a></td>
-                <td><a href="/paper/{{publication.id}}">Click here</a></td>
-                <td>Click here</td>
+                <td><a href="http://papers.nips.cc/paper/{{publication.pdf_name}}">Click here</a></td>
             </tr>
             {% endfor %}
             </tbody>

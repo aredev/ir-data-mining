@@ -15,15 +15,15 @@ from topics.lda import LDA
 def main():
     print("Use django to launch project using: \'python.exe manage.py runserver\'")
 
-    indexer = Indexer()
-    indexer.search("neural")
+    # indexer = Indexer()
+    # indexer.search("neural")
 
     # IRModel()
 
     # DbHandler().create_tables()
     # BartMigration().migrate_from_csv()
     # FransMigration().update_abstracts()
-    # YljaMigration().generate_topics()
+    YljaMigration().parse_suggestions_from_csv()
     # MatthiasMigration().parse_from_csv()
 
 

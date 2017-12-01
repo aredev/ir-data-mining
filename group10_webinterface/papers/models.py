@@ -35,7 +35,6 @@ class Paper(models.Model):
     authors = models.ManyToManyField(Author, through='PaperAuthor', related_name='authored_papers')
     topics = models.ManyToManyField('Topic', through='PaperTopic')
     suggested_authors = models.ManyToManyField(Author, through='PaperSuggestedAuthor', related_name='author_suggested_for_papers')
-    suggested_papers = models.ManyToManyField('Paper', through='SuggestedPaper', related_name='paper_suggested_for_papers')
 
     class Meta:
         managed = False
@@ -54,14 +53,15 @@ class PaperSuggestedAuthor(models.Model):
 
 
 class SuggestedPaper(models.Model):
-    id = models.IntegerField(primary_key=True)
-    paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
-    suggested_paper = models.ForeignKey(Paper, on_delete=models.CASCADE, related_name='suggested_for_paper')
+    id = models.IntegerField(blank=True, primary_key=True)
+    paper = models.ForeignKey(Paper, on_delete=models.CASCADE, related_name='suggested_papers')
+    suggested_paper = models.ForeignKey(Paper, on_delete=models.CASCADE, related_name='paper_suggested_for_paper')
+    probability = models.FloatField()
 
     class Meta:
         managed = False,
         db_table = 'suggested_papers',
-        unique_together = ('paper', 'suggested_paper')
+        unique_together = (('paper', 'suggested_paper'),)
 
 
 class Topic(models.Model):

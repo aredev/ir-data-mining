@@ -68,7 +68,7 @@
 Download PDF</a>
 
 			<div>
-				{% for topic in result.topics.all %}
+				{% for topic in result.topics.all|slice:":3" %}
 				<a href="/topic/{{topic.id}}">
 					<span class="article__more">
 						<i class="fa fa-folder" aria-hidden="true"></i>

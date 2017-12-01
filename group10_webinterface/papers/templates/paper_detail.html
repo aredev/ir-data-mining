@@ -9,6 +9,10 @@
     {% endfor %}
 </div>
 
+<p>
+    {{paper.abstract}}
+</p>
+
 <a href="http://papers.nips.cc/paper/{{paper.pdf_name}}">
     <button>
         <i class="fa fa-cloud-download fa-2x" aria-hidden="true"></i>
@@ -86,7 +90,7 @@
         </table>
     </div>
     <div id="similarPapers" class="tab-pane fade">
-        Coming soon!
+            {{paper.suggested_papers}}
     </div>
 </div>
 

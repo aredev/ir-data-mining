@@ -114,9 +114,8 @@ class DbHandler(object):
                  `id` INTEGER PRIMARY KEY,
                  `paper_id` INTEGER NOT NULL,
                  `suggested_paper_id` INTEGER NOT NULL,
-
-                 CONSTRAINT paper_suggested_paper UNIQUE (paper_id, suggested_paper_id)
-             );
+                 `probability` FLOAT NOT NULL
+              );
              """
         self.cursor.execute(create_suggested_papers_table)
         #

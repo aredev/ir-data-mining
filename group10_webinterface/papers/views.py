@@ -65,12 +65,19 @@ def search(request):
 
 
 # This function assigns the pagerank of a paper.
+# Max pagerank multiplied with the score
 def assign_pagerank(result_list, irm_model, y=1.0):
-    return result_list
-    # for i, result in enumerate(result_list):
-        # result_list[i]['score'] = result['score'] + y * irm_model.reputation_scores.get_reputation_score_by_paper(
-        #     result['docId'])
     # return result_list
+    for result in result_list:
+        score = result['score']
+        paper = Paper.objects.get(id=result['docId'])
+        author_list = list(paper.authors.all())
+
+        # Get the author with the highest pagerank score
+        author_list = sorted(author_list, key=lambda x: x.pagerank, reverse=True)
+        highest_pagerank_score = author_list[0].pagerank
+        result['score'] = score * highest_pagerank_score
+    return result_list
 
 
 def combine_with_year_results(combined_title_body_results, year_results):
