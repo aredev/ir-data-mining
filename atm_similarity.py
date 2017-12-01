@@ -18,9 +18,8 @@ class atm_similarity:
             reader = csv.reader(f)
             next(reader)
             self.author = list(reader)
-
+        self.NA_author_index = len(self.author)
         self.author.append(['N/A', 'N/A'])
-
         with open('data_atm/score_list.pkl', 'rb') as f:
             score_list = pickle.load(f)
         self.score_list = np.array(score_list)
@@ -34,8 +33,8 @@ class atm_similarity:
         sorted_list = list(np.argsort(vector)[::-1][:self.N])
         order = []
         for x in range(len(sorted_list)):
-            if vector[sorted_list[x]] >= 1:
-                order.append(sorted_list[x])
+            #if vector[sorted_list[x]] >= 1:        # Threshold filtering has been disabled
+            order.append(sorted_list[x])
         #print(len(sorted_list))
         return order
 
@@ -96,7 +95,7 @@ class atm_similarity:
     def get_all_similarities(self, auth_index1):
         sim_scores = []
         for auth_index2 in range(len(self.score_list)):
-            if auth_index2 == 8653:
+            if auth_index2 == self.NA_author_index:
                 sim_scores.append(0)
             else:
                 sim_scores.append(self.get_similarity(auth_index1, auth_index2))
@@ -106,7 +105,7 @@ class atm_similarity:
     def get_all_similarities_vector(self, sim_vector):
         sim_scores = []
         for auth_index2 in range(len(self.score_list)):
-            if auth_index2 == 8653:
+            if auth_index2 == self.NA_author_index:
                 sim_scores.append(0)
             else:
                 sim_scores.append(self.get_similarity_vector_author(sim_vector, auth_index2))

@@ -7,19 +7,24 @@ from sklearn import preprocessing
 import matplotlib.pyplot as plt
 from random import randint
 from scipy.stats.stats import pearsonr
+import math
 
-def create_paper2author_sug(filename="data_atm/paper_2_author_sug.csv", type="max", normalize=False):
-    """This function creates author suggestions based on the authors of a paper."""
+def create_paper2author_sug(filename="data_atm/paper_2_author_sug.csv", type="max", normalize=False, n_topics=10, n_authors=20):
+    """
+    This function creates author suggestions based on the authors of a paper.
+    Possible types: add, max, min, mean and pairwise
+    """
+    print("Start the creation of " + filename)
     paper_author_list = load_paper_authors()
     author_id_list = load_authors_id()
-    authorsim = atm_similarity()
+    authorsim = atm_similarity(n_topics=n_topics, n_authors=n_authors)
     result_list = []
     for paper in paper_author_list: #[p for p in paper_author_list if len(p) > 2]:
         author_sim_list = []
         authors_of_paper = [author_id_list.index(a) for a in paper[1:]]  #might throw an error
 
         if type == "pairwise":
-            top_matches = compute_highest_pairwise_matches(authorsim, authors_of_paper)
+            top_matches = compute_highest_pairwise_matches(authorsim, authors_of_paper, n_authors=n_authors)
         else:
             for author in authors_of_paper:
                 author_sim_list.append(authorsim.get_list(author))
@@ -45,13 +50,13 @@ def create_author_2_author_sug(top=10):
     save_rows_to_csv(suggestion_list, filename="data_atm/author_2_author_sug_top" + str(top) + ".csv")
 
 
-def compute_highest_pairwise_matches(authorsim, authors_of_paper):
+def compute_highest_pairwise_matches(authorsim, authors_of_paper, n_authors=20):
     """Computes the top_matches based on the highest pairwise sum of similarity"""
     total_similarity = np.zeros(len(authorsim.author))
     for author in authors_of_paper:
         total_similarity += np.asarray(authorsim.get_all_similarities(author))
     #print(total_similarity)
-    best = np.argsort(total_similarity)[::-1][:10]
+    best = np.argsort(total_similarity)[::-1][:n_authors]
     #print("Indices: "+str(best))
     #print("Values: "+str([total_similarity[b] for b in best]))
     return best
@@ -128,7 +133,7 @@ def load_obj(filename):
 
 
 def combine_vectors(vector_list, type="max", normalize=False):
-    """Combines the vectors using max or mean"""
+    """Combines the vectors using add, max, min or mean"""
     combined_vector = []
     if len(vector_list) > 0:
         v_length = len(vector_list[0])
@@ -139,6 +144,8 @@ def combine_vectors(vector_list, type="max", normalize=False):
             column = [row[i] for row in vector_list]
             if type is "max":
                 combined_vector.append(max(column))
+            if type is "min":
+                combined_vector.append(min(column))
             if type is "mean":
                 combined_vector.append(np.mean(column))
             if type is "add":
@@ -146,7 +153,7 @@ def combine_vectors(vector_list, type="max", normalize=False):
     return combined_vector
 
 
-def save_rows_to_csv(result_list, filename="data_atm/paper_2_author_sug_max_with_small.csv"):
+def save_rows_to_csv(result_list, filename="data_atm/defaultname.csv"):
     """This function saves the result to a csv file"""
     try:
         with open(filename, 'w', encoding="utf8", newline='') as csv_file:
@@ -352,6 +359,7 @@ def distance_similarity_correlation():
     print("Correlation: " + str(np.corrcoef(all_similarities, all_distances)[0, 1]))
     print("Pearson correlation: " + str(pearsonr(all_similarities, all_distances)))
 
+
 def histogram_of_top_suggested_distance(nr_sug=10):
     average_list = []
     discon_ratio_list = []
@@ -387,8 +395,123 @@ def random_test_sample(a2a_sug_file="data_atm/author_2_author_sug_top10.csv"):
 
     print("-"*20)
 
-if __name__ == "__main__":
 
+def evaluate_testset_results_p2a(ts_prefix, filename_ts_a, sug_filename, max_range=0):
+    """
+
+    :param ts_prefix: a paper id prefix such as GW (global warming) to identify ts papers
+    :param filename_ts_a: the file name of pkl containing the ts author names (ids)
+    :param sug_filename: the name of the file that has the suggestions such as data_atm/paper_2_author_sug_add.csv
+    :return:
+    """
+    ts_authors = load_obj(filename_ts_a)
+    papers = load_csv_rows(sug_filename)
+    if max_range == 0:
+        max_range = len(papers[0])-1
+    non_ts_to_ts_sug = 0        # Non test set papers give test set authors (Fault)
+    non_ts_to_non_ts_sug = 0    # Correct
+    ts_to_non_ts_sug = 0        # test set papers give non test set authors (Fault)
+    ts_to_ts_sug = 0            # Correct
+
+    for paper in papers:
+        if paper[0].startswith(ts_prefix):
+            correct = len(set(paper[1:max_range+1]).intersection(ts_authors))
+            ts_to_non_ts_sug += max_range - correct
+            ts_to_ts_sug += correct
+        else:
+            faults = len(set(paper[1:max_range+1]).intersection(ts_authors))
+            non_ts_to_ts_sug += faults
+            non_ts_to_non_ts_sug += max_range - faults
+    #print("Correct: " + str(non_ts_to_non_ts_sug + ts_to_ts_sug) + ", Faults: " + str(ts_to_non_ts_sug + non_ts_to_ts_sug))
+    #print("True ts to ts " + str(ts_to_ts_sug / (ts_to_ts_sug + ts_to_non_ts_sug)))
+    #print("True non ts to  non ts " + str(non_ts_to_non_ts_sug / (non_ts_to_ts_sug + non_ts_to_non_ts_sug)))
+
+    # for visibility reasons:
+    tp = ts_to_ts_sug
+    fp = non_ts_to_ts_sug
+    tn = non_ts_to_non_ts_sug
+    fn = ts_to_non_ts_sug
+
+    true_positive_rate = tp / (tp + fn)
+    true_negative_rate = tn / (tn + fp)
+    # precision is super biased on de division between test set and actual set.
+    precision = ts_to_ts_sug / (ts_to_ts_sug + non_ts_to_ts_sug)
+    # Matthews correlation coefficient is used in machine learning as a measure of the quality of binary (two-class) classifications (wikipedia)
+    mcc = (tp * tn - fp * fn) / math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
+    return true_positive_rate, true_negative_rate, precision, mcc
+
+def evaluate_testset_graph(ts_prefix,filename_ts_a, nr_sug=20, eval_type=0, nr_topics=25, extra=""):
+    """
+    This function is used to gather statistics and plot them in a graph using different nr suggestions
+    The following stats are available 0: True positive rate, 1: True negative rate, 2: Precision, 3: MCC
+    """
+    eval_type_name = ['True positive rate', 'True_negative_rate', 'Precision', 'MCC']
+    sug_prefix = "data_atm/paper_2_author_sug_"
+    results = [[], [], []]
+    methods = ['add', 'pairwise', 'max']
+
+    for i in range(1, nr_sug+1):
+        for j, method in enumerate(methods):
+            results[j].append(evaluate_testset_results_p2a(ts_prefix, filename_ts_a, sug_prefix + method + str(nr_topics) + extra + ".csv", max_range=i)[eval_type])
+
+    plt.plot(range(1, nr_sug+1), results[0], 'ro', color="red")
+    plt.plot(range(1, nr_sug+1), results[1], 'ro', color="blue")
+    plt.plot(range(1, nr_sug+1), results[2], 'ro', color="green")
+    #plt.plot(range(1, nr_sug+1), sug_random, color="black")
+    plt.legend(methods)
+    plt.title(ts_prefix + " using the top " + str(nr_topics) + " topics.")
+    plt.ylim((0, 1))
+    #plt.xlim([1, 20])
+    plt.xticks([x for x in range(1, 21) if 1 == x % 2])
+    plt.ylabel(eval_type_name[eval_type])
+    plt.xlabel('Nr top suggestion')
+    plt.savefig("data_atm/" + ts_prefix + "_test_set_" + eval_type_name[eval_type].replace(" ", "_") + extra + str(nr_topics) + ".png")
+    #plt.show()
+    plt.clf()
+
+
+
+def not_in_range_counter(author_id_list, first_index_a, last_index_a):
+    """This function gives the number of authors that are not in the range of (first_index_a, last_index_a)
+    This code is obsolete since the format has changed"""
+    match_counter = 0
+    for author in author_id_list:
+        if int(author) < first_index_a or int(author) > last_index_a:
+            match_counter += 1
+    return match_counter
+
+def new_paper_ids(path="global_warming_txt", prefix="GW", max_range=24):
+    """This function prints all new ids for papers and their author ids (which are equal to their names)"""
+    """Has problems with non utf-8 names"""
+    for i in range(1, max_range):
+        try:
+            with open(path + "/" + str(i) + ".txt", 'r', encoding="utf8", errors='ignore') as csvfile:
+                graph_reader = csv.reader(csvfile, delimiter=',')
+                authors = next(graph_reader)
+                for author in authors:
+                    print("placeholder,"+prefix + str(i) + "," + author)
+        except EnvironmentError:
+            print("Failed to open" + path+str(i)+".txt")
+
+
+def print_author():
+    """This function rewrites the given author.pkl of Bart to an authors.csv" format"""
+    author_list = [["id","name"]]
+    author_list.extend(load_obj("data_atm/author_list.pkl"))
+    save_rows_to_csv(author_list, filename="data/authors.csv")
+
+def run_all_evaluation_plots():
+    for t in [10,20,25]:
+        for p in ["NS", "GW"]:
+            for e in ["", "_no_threshold"]:
+                evaluate_testset_graph(p, "data_atm/T"+p+"_authors_list.pkl", nr_topics=t, eval_type=3, extra=e)
+
+if __name__ == "__main__":
+    # Functions to load new test sets:
+    # print_author()
+    # new_paper_ids(path="network_security_txt", prefix="NS", max_range=26)
+
+    #print(list_author_not_in_range(["1","2","3","4","5"], 2, 4))
 
     #get_titles_of_authors(["1"])
     #print(cooperation_ratio(["1", "971", "1730", "168", "901", "308"]))
@@ -400,8 +523,6 @@ if __name__ == "__main__":
     #create_author_2_author_sug(top=10)
 
     #p2a_suggestions_ratio("data_atm/paper_2_author_sug_max_with_small.csv")
-    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_add4.csv", type="add")
-    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_add_normal5.csv", type="add", normalize=True)
 
     #distance_similarity_correlation()
 
@@ -409,12 +530,28 @@ if __name__ == "__main__":
     #average_distance_author_to_all()
     #give_complete_graph_coop_ratio()
 
-    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_mean.csv", type="mean", normalize=False)
-    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_add.csv", type="add", normalize=False)
-    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_pairwise.csv", type="pairwise", normalize=False)
+    """These functions create suggestions"""
+    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_max15.csv", type="max", n_topics=15)
+
+    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_norm_add10_no_threshold.csv", type="add", n_topics=10, normalize=True)
+    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_norm_add20_no_threshold.csv", type="add", n_topics=20, normalize=True)
+    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_norm_add25_no_threshold.csv", type="add", n_topics=25, normalize=True)
+
+    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_pairwise20.csv", type="pairwise", n_topics=20)
+    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_pairwise15.csv", type="pairwise", n_topics=15)
+    #create_paper2author_sug(filename="data_atm/paper_2_author_sug_pairwise20.csv", type="pairwise", n_topics=20)
 
     """Evaluation functions"""
     # random_test_sample()
     # give_overall_coop_ratio()
-    distance_similarity_correlation()
-
+    # distance_similarity_correlation()
+    #evaluate_testset_results_p2a("GW", "data_atm/TGW_authors_list.pkl", "data_atm/paper_2_author_sug_add.csv")
+    #evaluate_testset_graph("NS", "data_atm/TNS_authors_list.pkl", nr_topics=10, eval_type=3)
+    #evaluate_testset_graph("NS", "data_atm/TNS_authors_list.pkl",nr_topics=20, eval_type=3)
+    #evaluate_testset_graph("NS", "data_atm/TNS_authors_list.pkl", nr_topics=25, eval_type=3)
+    #evaluate_testset_graph("GW", "data_atm/TGW_authors_list.pkl", nr_topics=10, eval_type=3)
+    #evaluate_testset_graph("GW", "data_atm/TGW_authors_list.pkl", nr_topics=20, eval_type=3)
+    #evaluate_testset_graph("NS", "data_atm/TNS_authors_list.pkl", nr_topics=10, eval_type=3, extra="_no_threshold")
+    #evaluate_testset_graph("NS", "data_atm/TNS_authors_list.pkl", nr_topics=20, eval_type=3, extra="_no_threshold")
+    #evaluate_testset_graph("NS", "data_atm/TNS_authors_list.pkl", nr_topics=25, eval_type=3, extra="_no_threshold")
+    run_all_evaluation_plots()
