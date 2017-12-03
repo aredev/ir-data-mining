@@ -69,14 +69,14 @@ def search(request):
 def assign_pagerank(result_list, irm_model, y=1.0):
     # return result_list
     for result in result_list:
-        score = result['score']
-        paper = Paper.objects.get(id=result['docId'])
-        author_list = list(paper.authors.all())
+        if result['docId'] != 6052:
+            paper = Paper.objects.get(id=result['docId'])
+            author_list = list(paper.authors.all())
 
-        # Get the author with the highest pagerank score
-        author_list = sorted(author_list, key=lambda x: x.pagerank, reverse=True)
-        highest_pagerank_score = author_list[0].pagerank
-        result['score'] = score * highest_pagerank_score
+            # Get the author with the highest pagerank score
+            author_list = sorted(author_list, key=lambda x: x.pagerank, reverse=True)
+            highest_pagerank_score = author_list[0].pagerank
+            result['score'] *= highest_pagerank_score
     return result_list
 
 

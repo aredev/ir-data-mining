@@ -7,9 +7,11 @@
 # from data.bart_migration import BartMigration
 # from data.matthias_migration import MatthiasMigration
 # from data.ylja_migration import YljaMigration
-from db_handler import DbHandler
+# from db_handler import DbHandler
+from data.ylja_migration import YljaMigration
 from indexer.indexer import Indexer
 from topics.lda import LDA
+import data.fix_paper_authors
 
 
 def main():

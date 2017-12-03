@@ -36,6 +36,24 @@ class Paper(models.Model):
     topics = models.ManyToManyField('Topic', through='PaperTopic')
     suggested_authors = models.ManyToManyField(Author, through='PaperSuggestedAuthor', related_name='author_suggested_for_papers')
 
+    def __str__(self):
+        return "{} {}".format(self.id, self.title)
+
+    def get_suggested_papers(self):
+        import sqlite3
+        conn = sqlite3.connect('data/database.sqlite')
+        c = conn.cursor()
+        query = "SELECT * FROM suggested_papers WHERE paper_id = {}".format(self.id)
+        results_db = c.execute(query)
+        results = []
+        for r in results_db:
+            sp_id = r[2]
+            paper = Paper.objects.get(id=sp_id)
+            results.append({'paper': paper, 'probability': r[3]})
+
+        return list(results)
+
+
     class Meta:
         managed = False
         db_table = 'papers'
@@ -54,7 +72,7 @@ class PaperSuggestedAuthor(models.Model):
 
 class SuggestedPaper(models.Model):
     id = models.IntegerField(blank=True, primary_key=True)
-    paper = models.ForeignKey(Paper, on_delete=models.CASCADE, related_name='suggested_papers')
+    paper = models.ForeignKey(Paper, on_delete=models.CASCADE, related_name='papers')
     suggested_paper = models.ForeignKey(Paper, on_delete=models.CASCADE, related_name='paper_suggested_for_paper')
     probability = models.FloatField()
 
@@ -130,6 +148,3 @@ class TopicEvolution(models.Model):
         managed = False
         db_table = 'topic_evolutions'
         unique_together = (('year', 'topic'),)
-
-
-

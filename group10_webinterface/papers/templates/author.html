@@ -25,16 +25,6 @@
 
 {% block details %}
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css">
-
-
-<style type="text/css">
-    #mynetwork {
-        width: 600px;
-        height: 400px;
-        border: 1px solid lightgray;
-    }
-</style>
 
 <ul class="nav nav-tabs">
     <li class="active"><a data-toggle="tab" href="#home">Publications</a></li>
@@ -63,46 +53,31 @@
         </table>
     </div>
     <div id="menu1" class="tab-pane fade">
-        <div id="mynetwork"></div>
+        <table class="table" style="width:100%" id="similarAuthors">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Similarity</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for sa in author.suggested_authors.all %}
+            <tr>
+                <td><a href="/author/{{sa.suggested_author.id}}">{{sa.suggested_author.name}}</a></td>
+                <td>{{sa.similarity|floatformat:4}}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
 
 <script type="text/javascript">
-    // create an array with nodes
-    var nodes = new vis.DataSet([
-        {id: 0, label: '{{author.name}}'},
-        {% for sa in author.suggested_authors.all %}
-            {id: {{sa.suggested_author.id}}, label: '{{sa.suggested_author.name}}'},
-        {% endfor %}
-    ]);
-
-    {% load humanize %}
-
-
-    // create an array with edges
-    var edges = new vis.DataSet([
-        {% for sa in author.suggested_authors.all %}
-            {from: 0, to: {{sa.suggested_author.id}}, label: '{{sa.similarity|floatformat:4}}' },
-        {% endfor %}
-    ]);
-
-    // create a network
-    var container = document.getElementById('mynetwork');
-
-    // provide the data in the vis format
-    var data = {
-        nodes: nodes,
-        edges: edges
-    };
-    var options = {};
-
-    // initialize your network!
-    var network = new vis.Network(container, data, options);
 
     $(document).ready(function(){
         $('#publications').DataTable();
+        $('#similarAuthors').DataTable();
     });
 
 </script>

@@ -4,11 +4,16 @@
 
 <h1 class="property__title">{{paper.title}} (<a href="/year/{{paper.year}}">{{paper.year}}</a>)</h1>
 <div class="property__info-item">
+    <h4>Authors</h4>
+    <ul>
     {% for author in paper.authors.all %}
-        <a href="/author/{{author.id}}">{{author.name}}</a>
+        <li><a href="/author/{{author.id}}">{{author.name}}</a></li>
     {% endfor %}
+    </ul>
 </div>
 
+<hr>
+<h4>Abstract</h4>
 <p>
     {{paper.abstract}}
 </p>
@@ -20,10 +25,25 @@
     </button>
 </a>
 
+<hr>
+
+<div>
+    <h4>Topics</h4>
+    {% for topic in paper.topics.all|slice:":3" %}
+        <a href="/topic/{{topic.id}}">
+            <span class="article__more">
+            <i class="fa fa-folder" aria-hidden="true"></i>
+                {{topic.name}}
+            </span>
+        </a>
+    {% endfor %}
+</div>
 
 {% endblock %}
 
 {% block details %}
+
+<hr>
 
 <ul class="nav nav-tabs">
     <li class="active"><a data-toggle="tab" href="#references">References</a></li>
@@ -90,7 +110,32 @@
         </table>
     </div>
     <div id="similarPapers" class="tab-pane fade">
-            {{paper.suggested_papers}}
+        <table class="table" style="width:100%" id="simPapers">
+            <thead>
+            <tr>
+                <th>Authors</th>
+                <th>Title</th>
+                <th>Year</th>
+                <th>Probability</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for p in  paper.get_suggested_papers %}
+                <tr>
+                    <td>
+                        <ul>
+                        {% for author in p.paper.authors.all %}
+                            <li><a href="/author/{{author.id}}">{{author.name}}</a></li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                    <td><a href="/paper/{{p.paper.id}}">{{p.paper.title}}</a></td>
+                    <td><a href="/year/{{p.paper.year}}">{{p.paper.year}}</a></td>
+                    <td>{{p.probability}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -101,6 +146,8 @@
         $("#refByTable").dataTable();
 
         $("#simAuthors").dataTable();
+
+        $("#simPapers").dataTable();
     })
 </script>
 
