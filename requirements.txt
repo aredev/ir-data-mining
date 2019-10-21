@@ -2,7 +2,7 @@
 # install pip-tools and run the following command:
 # pip-compile -U requirements.txt
 gensim==3.0.1
-nltk==3.2.5
+nltk==3.4.5
 django==1.11.6
 whoosh==2.7.4
 tqdm==4.19.4
